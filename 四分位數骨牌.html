@@ -106,466 +106,6 @@ tailwind.config = { theme: { extend: {} } };
 <body>
 <div id="root"><div style="font-family:-apple-system,sans-serif;padding:48px;text-align:center;color:#64748b">載入中…</div></div>
 <script>
-var DragDropTouch;
-(function (DragDropTouch_1) {
-    'use strict';
-    /**
-     * Object used to hold the data that is being dragged during drag and drop operations.
-     *
-     * It may hold one or more data items of different types. For more information about
-     * drag and drop operations and data transfer objects, see
-     * <a href="https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer">HTML Drag and Drop API</a>.
-     *
-     * This object is created automatically by the @see:DragDropTouch singleton and is
-     * accessible through the @see:dataTransfer property of all drag events.
-     */
-    var DataTransfer = (function () {
-        function DataTransfer() {
-            this._dropEffect = 'move';
-            this._effectAllowed = 'all';
-            this._data = {};
-        }
-        Object.defineProperty(DataTransfer.prototype, 'dropEffect', {
-            /**
-             * Gets or sets the type of drag-and-drop operation currently selected.
-             * The value must be 'none',  'copy',  'link', or 'move'.
-             */
-            get: function () {
-                return this._dropEffect;
-            },
-            set: function (value) {
-                this._dropEffect = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(DataTransfer.prototype, 'effectAllowed', {
-            /**
-             * Gets or sets the types of operations that are possible.
-             * Must be one of 'none', 'copy', 'copyLink', 'copyMove', 'link',
-             * 'linkMove', 'move', 'all' or 'uninitialized'.
-             */
-            get: function () {
-                return this._effectAllowed;
-            },
-            set: function (value) {
-                this._effectAllowed = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(DataTransfer.prototype, 'types', {
-            /**
-             * Gets an array of strings giving the formats that were set in the @see:dragstart event.
-             */
-            get: function () {
-                return Object.keys(this._data);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * Removes the data associated with a given type.
-         *
-         * The type argument is optional. If the type is empty or not specified, the data
-         * associated with all types is removed. If data for the specified type does not exist,
-         * or the data transfer contains no data, this method will have no effect.
-         *
-         * @param type Type of data to remove.
-         */
-        DataTransfer.prototype.clearData = function (type) {
-            if (type != null) {
-                delete this._data[type];
-            }
-            else {
-                this._data = null;
-            }
-        };
-        /**
-         * Retrieves the data for a given type, or an empty string if data for that type does
-         * not exist or the data transfer contains no data.
-         *
-         * @param type Type of data to retrieve.
-         */
-        DataTransfer.prototype.getData = function (type) {
-            return this._data[type] || '';
-        };
-        /**
-         * Set the data for a given type.
-         *
-         * For a list of recommended drag types, please see
-         * https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Recommended_Drag_Types.
-         *
-         * @param type Type of data to add.
-         * @param value Data to add.
-         */
-        DataTransfer.prototype.setData = function (type, value) {
-            this._data[type] = value;
-        };
-        /**
-         * Set the image to be used for dragging if a custom one is desired.
-         *
-         * @param img An image element to use as the drag feedback image.
-         * @param offsetX The horizontal offset within the image.
-         * @param offsetY The vertical offset within the image.
-         */
-        DataTransfer.prototype.setDragImage = function (img, offsetX, offsetY) {
-            var ddt = DragDropTouch._instance;
-            ddt._imgCustom = img;
-            ddt._imgOffset = { x: offsetX, y: offsetY };
-        };
-        return DataTransfer;
-    }());
-    DragDropTouch_1.DataTransfer = DataTransfer;
-    /**
-     * Defines a class that adds support for touch-based HTML5 drag/drop operations.
-     *
-     * The @see:DragDropTouch class listens to touch events and raises the
-     * appropriate HTML5 drag/drop events as if the events had been caused
-     * by mouse actions.
-     *
-     * The purpose of this class is to enable using existing, standard HTML5
-     * drag/drop code on mobile devices running IOS or Android.
-     *
-     * To use, include the DragDropTouch.js file on the page. The class will
-     * automatically start monitoring touch events and will raise the HTML5
-     * drag drop events (dragstart, dragenter, dragleave, drop, dragend) which
-     * should be handled by the application.
-     *
-     * For details and examples on HTML drag and drop, see
-     * https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Drag_operations.
-     */
-    var DragDropTouch = (function () {
-        /**
-         * Initializes the single instance of the @see:DragDropTouch class.
-         */
-        function DragDropTouch() {
-            this._lastClick = 0;
-            // enforce singleton pattern
-            if (DragDropTouch._instance) {
-                throw 'DragDropTouch instance already created.';
-            }
-            // detect passive event support
-            // https://github.com/Modernizr/Modernizr/issues/1894
-            var supportsPassive = false;
-            document.addEventListener('test', function () { }, {
-                get passive() {
-                    supportsPassive = true;
-                    return true;
-                }
-            });
-            // listen to touch events
-            if ('ontouchstart' in document) {
-                var d = document, ts = this._touchstart.bind(this), tm = this._touchmove.bind(this), te = this._touchend.bind(this), opt = supportsPassive ? { passive: false, capture: false } : false;
-                d.addEventListener('touchstart', ts, opt);
-                d.addEventListener('touchmove', tm, opt);
-                d.addEventListener('touchend', te);
-                d.addEventListener('touchcancel', te);
-            }
-        }
-        /**
-         * Gets a reference to the @see:DragDropTouch singleton.
-         */
-        DragDropTouch.getInstance = function () {
-            return DragDropTouch._instance;
-        };
-        // ** event handlers
-        DragDropTouch.prototype._touchstart = function (e) {
-            var _this = this;
-            if (this._shouldHandle(e)) {
-                // raise double-click and prevent zooming
-                if (Date.now() - this._lastClick < DragDropTouch._DBLCLICK) {
-                    if (this._dispatchEvent(e, 'dblclick', e.target)) {
-                        if (e.cancelable) {
-                            e.preventDefault();
-                        }
-                        this._reset();
-                        return;
-                    }
-                }
-                // clear all variables
-                this._reset();
-                // get nearest draggable element
-                var src = this._closestDraggable(e.target);
-                if (src) {
-                    // give caller a chance to handle the hover/move events
-                    if (!this._dispatchEvent(e, 'mousemove', e.target) &&
-                        !this._dispatchEvent(e, 'mousedown', e.target)) {
-                        // get ready to start dragging
-                        this._dragSource = src;
-                        this._ptDown = this._getPoint(e);
-                        this._lastTouch = e;
-                        if (e.cancelable) {
-                            e.preventDefault();
-                        }
-                        // show context menu if the user hasn't started dragging after a while
-                        setTimeout(function () {
-                            if (_this._dragSource == src && _this._img == null) {
-                                if (_this._dispatchEvent(e, 'contextmenu', src)) {
-                                    _this._reset();
-                                }
-                            }
-                        }, DragDropTouch._CTXMENU);
-                        if (DragDropTouch._ISPRESSHOLDMODE) {
-                            this._pressHoldInterval = setTimeout(function () {
-                                _this._isDragEnabled = true;
-                                _this._touchmove(e);
-                            }, DragDropTouch._PRESSHOLDAWAIT);
-                        }
-                    }
-                }
-            }
-        };
-        DragDropTouch.prototype._touchmove = function (e) {
-            if (this._shouldCancelPressHoldMove(e)) {
-              this._reset();
-              return;
-            }
-            if (this._shouldHandleMove(e) || this._shouldHandlePressHoldMove(e)) {
-                // see if target wants to handle move
-                var target = this._getTarget(e);
-                if (this._dispatchEvent(e, 'mousemove', target)) {
-                    this._lastTouch = e;
-                    if (e.cancelable) {
-                        e.preventDefault();
-                    }
-                return;
-                }
-                // start dragging
-                if (this._dragSource && !this._img && this._shouldStartDragging(e)) {
-                    this._dispatchEvent(e, 'dragstart', this._dragSource);
-                    this._createImage(e);
-                    this._dispatchEvent(e, 'dragenter', target);
-                }
-                // continue dragging
-                if (this._img) {
-                    this._lastTouch = e;
-                    if (e.cancelable) {
-                        e.preventDefault(); // prevent scrolling
-                    }
-                    if (target != this._lastTarget) {
-                        this._dispatchEvent(this._lastTouch, 'dragleave', this._lastTarget);
-                        this._dispatchEvent(e, 'dragenter', target);
-                        this._lastTarget = target;
-                    }
-                    this._moveImage(e);
-                    this._isDropZone = this._dispatchEvent(e, 'dragover', target);
-                }
-            }
-        };
-        DragDropTouch.prototype._touchend = function (e) {
-            if (this._shouldHandle(e)) {
-                // see if target wants to handle up
-                if (this._dispatchEvent(this._lastTouch, 'mouseup', e.target)) {
-                    if (e.cancelable) {
-                        e.preventDefault();
-                    }
-                    return;
-                }
-                // user clicked the element but didn't drag, so clear the source and simulate a click
-                if (!this._img) {
-                    this._dragSource = null;
-                    this._dispatchEvent(this._lastTouch, 'click', e.target);
-                    this._lastClick = Date.now();
-                }
-                // finish dragging
-                this._destroyImage();
-                if (this._dragSource) {
-                    if (e.type.indexOf('cancel') < 0 && this._isDropZone) {
-                        this._dispatchEvent(this._lastTouch, 'drop', this._lastTarget);
-                    }
-                    this._dispatchEvent(this._lastTouch, 'dragend', this._dragSource);
-                    this._reset();
-                }
-            }
-        };
-        // ** utilities
-        // ignore events that have been handled or that involve more than one touch
-        DragDropTouch.prototype._shouldHandle = function (e) {
-            return e &&
-                !e.defaultPrevented &&
-                e.touches && e.touches.length < 2;
-        };
-
-        // use regular condition outside of press & hold mode
-        DragDropTouch.prototype._shouldHandleMove = function (e) {
-          return !DragDropTouch._ISPRESSHOLDMODE && this._shouldHandle(e);
-        };
-
-        // allow to handle moves that involve many touches for press & hold
-        DragDropTouch.prototype._shouldHandlePressHoldMove = function (e) {
-          return DragDropTouch._ISPRESSHOLDMODE &&
-              this._isDragEnabled && e && e.touches && e.touches.length;
-        };
-
-        // reset data if user drags without pressing & holding
-        DragDropTouch.prototype._shouldCancelPressHoldMove = function (e) {
-          return DragDropTouch._ISPRESSHOLDMODE && !this._isDragEnabled &&
-              this._getDelta(e) > DragDropTouch._PRESSHOLDMARGIN;
-        };
-
-        // start dragging when specified delta is detected
-        DragDropTouch.prototype._shouldStartDragging = function (e) {
-            var delta = this._getDelta(e);
-            return delta > DragDropTouch._THRESHOLD ||
-                (DragDropTouch._ISPRESSHOLDMODE && delta >= DragDropTouch._PRESSHOLDTHRESHOLD);
-        }
-
-        // clear all members
-        DragDropTouch.prototype._reset = function () {
-            this._destroyImage();
-            this._dragSource = null;
-            this._lastTouch = null;
-            this._lastTarget = null;
-            this._ptDown = null;
-            this._isDragEnabled = false;
-            this._isDropZone = false;
-            this._dataTransfer = new DataTransfer();
-            clearInterval(this._pressHoldInterval);
-        };
-        // get point for a touch event
-        DragDropTouch.prototype._getPoint = function (e, page) {
-            if (e && e.touches) {
-                e = e.touches[0];
-            }
-            return { x: page ? e.pageX : e.clientX, y: page ? e.pageY : e.clientY };
-        };
-        // get distance between the current touch event and the first one
-        DragDropTouch.prototype._getDelta = function (e) {
-            if (DragDropTouch._ISPRESSHOLDMODE && !this._ptDown) { return 0; }
-            var p = this._getPoint(e);
-            return Math.abs(p.x - this._ptDown.x) + Math.abs(p.y - this._ptDown.y);
-        };
-        // get the element at a given touch event
-        DragDropTouch.prototype._getTarget = function (e) {
-            var pt = this._getPoint(e), el = document.elementFromPoint(pt.x, pt.y);
-            while (el && getComputedStyle(el).pointerEvents == 'none') {
-                el = el.parentElement;
-            }
-            return el;
-        };
-        // create drag image from source element
-        DragDropTouch.prototype._createImage = function (e) {
-            // just in case...
-            if (this._img) {
-                this._destroyImage();
-            }
-            // create drag image from custom element or drag source
-            var src = this._imgCustom || this._dragSource;
-            this._img = src.cloneNode(true);
-            this._copyStyle(src, this._img);
-            this._img.style.top = this._img.style.left = '-9999px';
-            // if creating from drag source, apply offset and opacity
-            if (!this._imgCustom) {
-                var rc = src.getBoundingClientRect(), pt = this._getPoint(e);
-                this._imgOffset = { x: pt.x - rc.left, y: pt.y - rc.top };
-                this._img.style.opacity = DragDropTouch._OPACITY.toString();
-            }
-            // add image to document
-            this._moveImage(e);
-            document.body.appendChild(this._img);
-        };
-        // dispose of drag image element
-        DragDropTouch.prototype._destroyImage = function () {
-            if (this._img && this._img.parentElement) {
-                this._img.parentElement.removeChild(this._img);
-            }
-            this._img = null;
-            this._imgCustom = null;
-        };
-        // move the drag image element
-        DragDropTouch.prototype._moveImage = function (e) {
-            var _this = this;
-            requestAnimationFrame(function () {
-                if (_this._img) {
-                    var pt = _this._getPoint(e, true), s = _this._img.style;
-                    s.position = 'absolute';
-                    s.pointerEvents = 'none';
-                    s.zIndex = '999999';
-                    s.left = Math.round(pt.x - _this._imgOffset.x) + 'px';
-                    s.top = Math.round(pt.y - _this._imgOffset.y) + 'px';
-                }
-            });
-        };
-        // copy properties from an object to another
-        DragDropTouch.prototype._copyProps = function (dst, src, props) {
-            for (var i = 0; i < props.length; i++) {
-                var p = props[i];
-                dst[p] = src[p];
-            }
-        };
-        DragDropTouch.prototype._copyStyle = function (src, dst) {
-            // remove potentially troublesome attributes
-            DragDropTouch._rmvAtts.forEach(function (att) {
-                dst.removeAttribute(att);
-            });
-            // copy canvas content
-            if (src instanceof HTMLCanvasElement) {
-                var cSrc = src, cDst = dst;
-                cDst.width = cSrc.width;
-                cDst.height = cSrc.height;
-                cDst.getContext('2d').drawImage(cSrc, 0, 0);
-            }
-            // copy style (without transitions)
-            var cs = getComputedStyle(src);
-            for (var i = 0; i < cs.length; i++) {
-                var key = cs[i];
-                if (key.indexOf('transition') < 0) {
-                    dst.style[key] = cs[key];
-                }
-            }
-            dst.style.pointerEvents = 'none';
-            // and repeat for all children
-            for (var i = 0; i < src.children.length; i++) {
-                this._copyStyle(src.children[i], dst.children[i]);
-            }
-        };
-        DragDropTouch.prototype._dispatchEvent = function (e, type, target) {
-            if (e && target) {
-                var evt = document.createEvent('Event'), t = e.touches ? e.touches[0] : e;
-                evt.initEvent(type, true, true);
-                evt.button = 0;
-                evt.which = evt.buttons = 1;
-                this._copyProps(evt, e, DragDropTouch._kbdProps);
-                this._copyProps(evt, t, DragDropTouch._ptProps);
-                evt.dataTransfer = this._dataTransfer;
-                target.dispatchEvent(evt);
-                return evt.defaultPrevented;
-            }
-            return false;
-        };
-        // gets an element's closest draggable ancestor
-        DragDropTouch.prototype._closestDraggable = function (e) {
-            for (; e; e = e.parentElement) {
-                if (e.hasAttribute('draggable') && e.draggable) {
-                    return e;
-                }
-            }
-            return null;
-        };
-        return DragDropTouch;
-    }());
-    /*private*/ DragDropTouch._instance = new DragDropTouch(); // singleton
-    // constants
-    DragDropTouch._THRESHOLD = 5; // pixels to move before drag starts
-    DragDropTouch._OPACITY = 0.5; // drag image opacity
-    DragDropTouch._DBLCLICK = 500; // max ms between clicks in a double click
-    DragDropTouch._CTXMENU = 900; // ms to hold before raising 'contextmenu' event
-    DragDropTouch._ISPRESSHOLDMODE = false; // decides of press & hold mode presence
-    DragDropTouch._PRESSHOLDAWAIT = 400; // ms to wait before press & hold is detected
-    DragDropTouch._PRESSHOLDMARGIN = 25; // pixels that finger might shiver while pressing
-    DragDropTouch._PRESSHOLDTHRESHOLD = 0; // pixels to move before drag starts
-    // copy styles/attributes from drag source to drag image element
-    DragDropTouch._rmvAtts = 'id,class,style,draggable'.split(',');
-    // synthesize and dispatch an event
-    // returns true if the event has been handled (e.preventDefault == true)
-    DragDropTouch._kbdProps = 'altKey,ctrlKey,metaKey,shiftKey'.split(',');
-    DragDropTouch._ptProps = 'pageX,pageY,clientX,clientY,screenX,screenY'.split(',');
-    DragDropTouch_1.DragDropTouch = DragDropTouch;
-})(DragDropTouch || (DragDropTouch = {}));
-
-</script>
-<script>
 /**
  * @license React
  * react.production.min.js
@@ -922,6 +462,45 @@ const InteractiveStemLeaf = () => {
     }
   };
 
+  // 直接把新分數加入「作用中區」(自由建立資料組時用，免去再點一下)
+  const handleAddActive = () => {
+    const num = parseInt(newValue, 10);
+    if (!isNaN(num)) {
+      setTiles([
+        ...tiles,
+        {
+          id: `custom-${customCounter}`,
+          value: num,
+          isOriginal: false,
+          location: 'active'
+        }
+      ]);
+      setCustomCounter(c => c + 1);
+      setNewValue('');
+    }
+  };
+
+  // 清空：把整組數據清零，讓學生從零開始自由填入新資料組
+  const clearAll = () => {
+    setTiles([]);
+    setDraggingId(null);
+    setDropPreviewIndex(null);
+    setNewValue('');
+  };
+
+  // 還原：回到題目原始的 20 筆數據
+  const restoreOriginal = () => {
+    setTiles(initialValues.map((val, idx) => ({
+      id: `orig-${idx}`,
+      value: val,
+      isOriginal: true,
+      location: 'active'
+    })));
+    setDraggingId(null);
+    setDropPreviewIndex(null);
+    setNewValue('');
+  };
+
   // 處理點擊骨牌 (移動區域)
   const toggleLocation = (id) => {
     setTiles(tiles.map(t => {
@@ -954,13 +533,10 @@ const InteractiveStemLeaf = () => {
     e.preventDefault();
   };
 
-  // 拖曳經過「作用中」區：依「手指/游標當前位置」即時找出最接近的插入縫隙，
-  // 讓游標掃過陣列時，縫隙跟著手指在骨牌之間移動 (左右鄰牌讓開)。
-  const handleActiveDragOver = (e) => {
-    e.preventDefault();
-    if (draggingId == null) return;
-    const tileEls = e.currentTarget.querySelectorAll('[draggable="true"]');
-    const x = e.clientX, y = e.clientY;
+  // 依「手指/游標當前位置」在作用中陣列裡找出最接近的插入縫隙索引。
+  const computePreviewIndex = (zoneEl, x, y) => {
+    if (!zoneEl) return 0;
+    const tileEls = zoneEl.querySelectorAll('[data-tile="1"]');
     let k = tileEls.length; // 預設插在最後
     for (let i = 0; i < tileEls.length; i++) {
       const r = tileEls[i].getBoundingClientRect();
@@ -969,7 +545,14 @@ const InteractiveStemLeaf = () => {
       if (x < mid) { k = i; break; } // 游標在這張牌的左半 → 插在它前面
       k = i + 1;                     // 游標已過這張牌 → 暫定插在它後面
     }
-    setDropPreviewIndex(k);
+    return k;
+  };
+
+  // 滑鼠 (桌機) 原生 HTML5 拖曳經過作用中區：縫隙跟著游標移動。
+  const handleActiveDragOver = (e) => {
+    e.preventDefault();
+    if (draggingId == null) return;
+    setDropPreviewIndex(computePreviewIndex(e.currentTarget, e.clientX, e.clientY));
   };
 
   const handleActiveDragLeave = (e) => {
@@ -980,6 +563,103 @@ const InteractiveStemLeaf = () => {
   const handleDragEnd = () => {
     setDraggingId(null);
     setDropPreviewIndex(null);
+  };
+
+  // ====== 指標 (Pointer) 拖曳：支援 iPad / Android 觸控與觸控筆 ======
+  // iPadOS Safari 不發送 touch 事件 (改用 Pointer Events)，原 polyfill 因此失效。
+  // 這裡用 Pointer Events 自行實作：拖曳時產生一個「殘影」跟著手指移動。
+  // 滑鼠 (pointerType === 'mouse') 直接略過，維持桌機原生 HTML5 拖曳。
+  // move / up 監聽掛在 document 上 (不掛在骨牌節點)，這樣即使 React 重繪、
+  // 骨牌節點被替換，拖曳過程仍然連續不中斷。
+  const ptrDrag = React.useRef({ id: null, active: false, startX: 0, startY: 0, offX: 0, offY: 0, ghost: null, move: null, up: null });
+  const suppressClickRef = React.useRef(false);
+  const tilesRef = React.useRef(tiles);
+  tilesRef.current = tiles;
+
+  const endPointerDrag = () => {
+    const st = ptrDrag.current;
+    if (st.ghost) st.ghost.remove();
+    if (st.move) document.removeEventListener('pointermove', st.move);
+    if (st.up) {
+      document.removeEventListener('pointerup', st.up);
+      document.removeEventListener('pointercancel', st.up);
+    }
+    st.ghost = null; st.move = null; st.up = null; st.id = null; st.active = false;
+  };
+
+  const handleTilePointerDown = (e, id) => {
+    if (e.pointerType === 'mouse') return; // 桌機滑鼠交給原生拖曳 + onClick
+    const st = ptrDrag.current;
+    endPointerDrag(); // 清掉任何殘留
+    const sourceNode = e.currentTarget;
+    const rc = sourceNode.getBoundingClientRect();
+    st.id = id; st.active = false;
+    st.startX = e.clientX; st.startY = e.clientY;
+    st.offX = e.clientX - rc.left;
+    st.offY = e.clientY - rc.top;
+
+    const move = (ev) => {
+      if (!st.active) {
+        if (Math.abs(ev.clientX - st.startX) + Math.abs(ev.clientY - st.startY) < 6) return;
+        // 超過門檻 → 開始拖曳，建立殘影
+        st.active = true;
+        setDraggingId(id);
+        const ghost = sourceNode.cloneNode(true);
+        const s = ghost.style;
+        s.position = 'fixed';
+        s.margin = '0';
+        s.width = rc.width + 'px';
+        s.height = rc.height + 'px';
+        s.transform = 'rotate(-3deg) scale(1.06)';
+        s.transition = 'none';
+        s.pointerEvents = 'none';
+        s.opacity = '0.85';
+        s.zIndex = '999999';
+        s.boxShadow = '0 10px 22px rgba(0,0,0,0.28)';
+        document.body.appendChild(ghost);
+        st.ghost = ghost;
+      }
+      if (st.active) {
+        if (ev.cancelable) ev.preventDefault(); // 防止頁面捲動
+        st.ghost.style.left = (ev.clientX - st.offX) + 'px';
+        st.ghost.style.top = (ev.clientY - st.offY) + 'px';
+        const az = document.getElementById('active-zone');
+        const r = az && az.getBoundingClientRect();
+        if (r && ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) {
+          setDropPreviewIndex(computePreviewIndex(az, ev.clientX, ev.clientY));
+        } else {
+          setDropPreviewIndex(null);
+        }
+      }
+    };
+
+    const up = (ev) => {
+      if (st.active) {
+        const x = ev.clientX, y = ev.clientY;
+        const inZone = (el) => {
+          if (!el) return false;
+          const r = el.getBoundingClientRect();
+          return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+        };
+        let targetLoc = null;
+        if (inZone(document.getElementById('active-zone'))) targetLoc = 'active';
+        else if (inZone(document.getElementById('reserve-zone'))) targetLoc = 'reserve';
+        if (targetLoc) {
+          setTiles(tilesRef.current.map(t => t.id === id ? { ...t, location: targetLoc } : t));
+        }
+        setDraggingId(null);
+        setDropPreviewIndex(null);
+        // 抑制拖曳結束後可能補發的 click（避免又切換一次），短暫後自動解除
+        suppressClickRef.current = true;
+        setTimeout(() => { suppressClickRef.current = false; }, 120);
+      }
+      endPointerDrag();
+    };
+
+    st.move = move; st.up = up;
+    document.addEventListener('pointermove', move, { passive: false });
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
   };
 
   // 計算邏輯與高亮索引取得
@@ -1086,6 +766,27 @@ const InteractiveStemLeaf = () => {
   const { sorted, n, q1Info, q2Info, q3Info, iqrInfo, meanInfo, sdInfo, rangeInfo } = activeTilesInfo;
   const reserveTiles = tiles.filter(t => t.location === 'reserve');
 
+  // 即時幹葉圖資料：莖 = 十位(含以上)，葉 = 個位，依作用中資料即時產生
+  const stemLeafData = useMemo(() => {
+    if (n === 0) return null;
+    const vals = sorted.map(t => t.value);
+    const ok = vals.every(v => Number.isInteger(v) && v >= 0);
+    if (!ok) return { unsupported: true };
+    const buckets = {};
+    vals.forEach(v => {
+      const stem = Math.floor(v / 10);
+      const leaf = v % 10;
+      (buckets[stem] = buckets[stem] || []).push(leaf);
+    });
+    const minStem = Math.floor(Math.min(...vals) / 10);
+    const maxStem = Math.floor(Math.max(...vals) / 10);
+    const rows = [];
+    for (let s = minStem; s <= maxStem; s++) {
+      rows.push({ stem: s, leaves: (buckets[s] || []).slice().sort((a, b) => a - b) });
+    }
+    return { rows, count: vals.length };
+  }, [sorted, n]);
+
   // 計算動態二分樹狀圖的結構數據
   const dynamicTreeData = useMemo(() => {
     if (n === 0) return null;
@@ -1144,14 +845,22 @@ const InteractiveStemLeaf = () => {
       else if (index === dropPreviewIndex) shoveStyle = { transform: 'translateX(18px)' };
     }
 
+    const isDragging = draggingId === tile.id;
+    const onTileClick = () => {
+      if (suppressClickRef.current) { suppressClickRef.current = false; return; }
+      toggleLocation(tile.id);
+    };
+
     return (
       <div
         draggable
+        data-tile="1"
         onDragStart={(e) => handleDragStart(e, tile.id)}
         onDragEnd={handleDragEnd}
-        onClick={() => toggleLocation(tile.id)}
+        onPointerDown={(e) => handleTilePointerDown(e, tile.id)}
+        onClick={onTileClick}
         style={shoveStyle}
-        className={`relative flex flex-col items-center justify-center w-12 h-16 sm:w-14 sm:h-20 border-2 rounded-md m-1 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${highlightClasses}`}
+        className={`relative flex flex-col items-center justify-center w-12 h-16 sm:w-14 sm:h-20 border-2 rounded-md m-1 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${highlightClasses} ${isDragging ? 'opacity-40' : ''}`}
         title="點擊或拖曳移動"
       >
         {badge}
@@ -1645,18 +1354,34 @@ const InteractiveStemLeaf = () => {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Active Zone */}
-            <div 
+            <div
+              id="active-zone"
               className="bg-white p-4 rounded-xl shadow-sm border-2 border-dashed border-blue-200 min-h-[200px]"
               onDrop={(e) => handleDrop(e, 'active')}
               onDragOver={handleActiveDragOver}
               onDragLeave={handleActiveDragLeave}
             >
-              <div className="flex justify-between items-center mb-3 border-b pb-2">
+              <div className="flex flex-wrap justify-between items-center gap-2 mb-3 border-b pb-2">
                 <h2 className="text-lg font-semibold text-blue-800 flex items-center">
                   <span className="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
                   作用中陣列 (已自動排序，共 <i>n</i> = {n} 個)
                 </h2>
-                <span className="text-xs text-slate-500">拖曳骨牌至此進行計算</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={restoreOriginal}
+                    className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded border border-slate-300 font-medium transition-colors"
+                    title="回到題目原始的 20 筆數據"
+                  >
+                    ↩️ 還原原始
+                  </button>
+                  <button
+                    onClick={clearAll}
+                    className="text-xs bg-red-50 hover:bg-red-100 text-red-700 px-2.5 py-1 rounded border border-red-300 font-medium transition-colors"
+                    title="清空整組數據，從零開始自由建立"
+                  >
+                    🗑️ 清空
+                  </button>
+                </div>
               </div>
               <div className="flex flex-wrap content-start">
                 {sorted.length === 0 ? (
@@ -1669,8 +1394,55 @@ const InteractiveStemLeaf = () => {
               </div>
             </div>
 
+            {/* Live Stem-and-Leaf Diagram */}
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-emerald-200">
+              <div className="flex flex-wrap justify-between items-center gap-2 mb-3 border-b border-emerald-100 pb-2">
+                <h2 className="text-lg font-semibold text-emerald-800 flex items-center gap-2">
+                  🌿 幹葉圖 (Stem-and-Leaf Diagram)
+                </h2>
+                <span className="text-xs text-slate-500">即時對應作用中數據 (<i>n</i> = {n})</span>
+              </div>
+
+              {stemLeafData ? (
+                stemLeafData.unsupported ? (
+                  <div className="text-sm text-slate-400 italic py-6 text-center">
+                    幹葉圖僅支援非負整數數據。
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center text-xs text-slate-500 font-semibold pb-1 mb-1 border-b border-slate-200">
+                      <span className="w-16 text-right pr-3">莖 Stem</span>
+                      <span className="pl-3">葉 Leaf (由小至大)</span>
+                    </div>
+                    <div className="font-mono text-base">
+                      {stemLeafData.rows.map(row => (
+                        <div key={row.stem} className="flex items-stretch py-1 border-b border-slate-50">
+                          <span className="w-16 text-right pr-3 font-bold text-emerald-700 border-r-2 border-emerald-300 flex items-center justify-end">
+                            {row.stem}
+                          </span>
+                          <span className="pl-3 flex items-center text-slate-700 tracking-[0.35em]">
+                            {row.leaves.length > 0
+                              ? row.leaves.join(' ')
+                              : <span className="text-slate-300 italic tracking-normal text-sm">（無）</span>}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-2">
+                      圖例：莖 | 葉 → 例如「3 | 6」代表數值 36。共 {stemLeafData.count} 筆。
+                    </p>
+                  </div>
+                )
+              ) : (
+                <div className="text-sm text-slate-400 italic py-6 text-center">
+                  作用中區沒有數據。請在下方新增分數，或按「↩️ 還原原始」載入題目數據。
+                </div>
+              )}
+            </div>
+
             {/* Reserve Zone */}
-            <div 
+            <div
+              id="reserve-zone"
               className="bg-slate-100 p-4 rounded-xl shadow-inner border-2 border-dashed border-slate-300 min-h-[120px]"
               onDrop={(e) => handleDrop(e, 'reserve')}
               onDragOver={handleDragOver}
@@ -1695,17 +1467,23 @@ const InteractiveStemLeaf = () => {
             
             {/* Add New Data Control */}
             <div className="bg-orange-50 p-4 rounded-xl shadow-sm border border-orange-200">
-              <h3 className="text-md font-bold text-orange-800 mb-2">➕ 新增學生分數 (對應 Part b)</h3>
-              <div className="flex gap-2 items-center">
-                <input 
-                  type="number" 
+              <h3 className="text-md font-bold text-orange-800 mb-2">➕ 新增 / 自由填入分數</h3>
+              <div className="flex gap-2 items-center flex-wrap">
+                <input
+                  type="number"
                   value={newValue}
                   onChange={(e) => setNewValue(e.target.value)}
                   placeholder="輸入整數分數..."
-                  className="border border-orange-300 rounded px-3 py-2 flex-grow focus:outline-none focus:ring-2 focus:ring-orange-400"
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddTile()}
+                  className="border border-orange-300 rounded px-3 py-2 flex-grow min-w-[140px] focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddActive()}
                 />
-                <button 
+                <button
+                  onClick={handleAddActive}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium transition-colors"
+                >
+                  ＋ 直接加入計算
+                </button>
+                <button
                   onClick={handleAddTile}
                   className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-medium transition-colors"
                 >
@@ -1713,7 +1491,8 @@ const InteractiveStemLeaf = () => {
                 </button>
               </div>
               <p className="text-xs text-orange-600 mt-2">
-                產生後，骨牌會出現在<b>備用區</b>，請點擊或拖曳至上方參與計算。
+                <b>「直接加入計算」</b>：分數立即進入作用中陣列與幹葉圖（自由建立資料組時最方便）。<br/>
+                <b>「產生橘色新骨牌」</b>：先放到<b>備用區</b>（對應 Part b 練習），再點擊或拖曳至上方。
               </p>
             </div>
 
