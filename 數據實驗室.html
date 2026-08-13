@@ -505,8 +505,54 @@ function drawConds(){
 }
 
 /* ================= 一句話攻略 ================= */
-function nearestBelow(m){const a=orig.filter(v=>v<=m);return a.length?a[a.length-1]:orig[0];}
-function nearestAbove(m){const a=orig.filter(v=>v>=m);return a.length?a[0]:orig[orig.length-1];}
+function nearestBelow(m){const a=data.filter(v=>v<=m);return a.length?a[a.length-1]:data[0];}
+function nearestAbove(m){const a=data.filter(v=>v>=m);return a.length?a[0]:data[data.length-1];}
+function zoneOf(v,c){
+  const mn=orig[0],mx=orig[orig.length-1];
+  if(v<mn) return '細過最細值 '+mn+' 嗰邊';
+  if(v>mx) return '大過最大值 '+mx+' 嗰邊';
+  if(v===mn) return '最細值 '+mn+' 嗰格';
+  if(v===mx) return '最大值 '+mx+' 嗰格';
+  if(v<c.q1) return 'Q₁('+fmt(c.q1)+') 以下';
+  if(v>c.q3) return 'Q₃('+fmt(c.q3)+') 以上';
+  if(v<c.q2) return 'Q₁ 同中位數之間';
+  if(v>c.q2) return '中位數同 Q₃ 之間';
+  return '啱啱中位數 '+fmt(c.q2);
+}
+function zoneSummary(sol,c){
+  const cnt={},ord=[];
+  sol.forEach(v=>{const z=zoneOf(v,c); if(!(z in cnt)){cnt[z]=0;ord.push(z);} cnt[z]++;});
+  return ord.map(z=>cnt[z]+' 個喺【'+z+'】').join('、');
+}
+function regionHas(v,c){
+  const mn=orig[0],mx=orig[orig.length-1],m=c.q2;
+  const lo=nearestBelow(m), hi=nearestAbove(m);
+  if(CFG.iqr==='down'){
+    if(CFG.median==='same') return v>=lo&&v<=hi;
+    if(CFG.median==='up')   return v>=m&&v<=c.q3;
+    if(CFG.median==='down') return v>=c.q1&&v<=m;
+    return v>=c.q1&&v<=c.q3;
+  }
+  if(CFG.iqr==='up'){
+    if(CFG.range==='same') return v===mn||v===mx;
+    return v<mn||v>mx;
+  }
+  return null;
+}
+let advKey='', advSol=null, advInReg=true;
+function advice(){
+  const key=data.join(',')+'|'+orig.join(',')+'|'+JSON.stringify(CFG)+'|'+
+            document.getElementById('kadd').value;
+  if(key!==advKey){
+    advKey=key;
+    const c=evalSet(data);
+    const hasReg = regionHas(c.q2,c)!==null;
+    let s = hasReg ? trySolve(v=>regionHas(v,c)===true) : null;
+    advInReg = !!s;
+    advSol = s || trySolve(null);
+  }
+  return advSol;
+}
 function whereText(o){
   const mn=orig[0], mx=orig[orig.length-1], m=o.q2;
   const lo=nearestBelow(m), hi=nearestAbove(m);
@@ -551,11 +597,18 @@ function oneLiner(){
       '加 data 只會令分佈域維持或者變大。改返呢個設定先。</div>'; return;
   }
   const kv=document.getElementById('kadd').value;
-  const kTxt=(kv==='any')?'':'（要加剛好 '+kv+' 個）';
-  let s='<div class="oneline">如果 ';
+  const remain=(kv==='any')?null:(+kv-added.length);
+  const kTxt=(remain===null)?'' : (remain>0?'（仲要加 '+remain+' 個）'
+              : remain===0?'（'+kv+' 個已經加晒）':'（<span class="warn2">加多咗 '+(-remain)+' 個</span>）');
+  const cs=evalSet(data);
+  let s='<div class="oneline">';
+  s+='<div class="small" style="margin-bottom:6px">現況：n = '+cs.n+'　·　Q₁ = '+fmt(cs.q1)+
+     '　·　中位數 = '+fmt(cs.q2)+'　·　Q₃ = '+fmt(cs.q3)+'　·　IQR = <b>'+fmt(cs.iqr)+
+     '</b>（原本 '+fmt(o.iqr)+'）'+(added.length? '　·　已加 '+added.join('、'):'')+'</div>';
+  s+='如果 ';
   s+= keep.length? '<b>'+keep.join('、')+'</b> 不變' : '<b>冇嘢</b>要保持不變';
   s+= move.length? '，而 '+move.join('、')+'，' : '，';
-  s+= '<br>就要先嘗試喺 <span class="slot">'+whereText(o)+'</span> 加 data'+kTxt+'，';
+  s+= '<br>就要先嘗試喺 <span class="slot">'+whereText(cs)+'</span> 加 data'+kTxt+'，';
   s+= '<br>再<b>數多一次</b> Q₁、Q₃ 係第幾個，睇下啱唔啱。';
   const extra=[];
   if(CFG.median==='same') extra.push('median 唔變 ⇒ 落下半、落上半嘅數目要<b>一半一半</b>。');
@@ -567,6 +620,20 @@ function oneLiner(){
   if(CFG.mode==='same')   extra.push('mode 唔變 ⇒ 唔好一次過加太多同一個值（唔可以追過 '+o.modes.freq+' 次）。');
   if(CFG.range==='same'&&CFG.iqr==='up')
     extra.push('<span class="warn2">呢個組合好可能做唔到</span>：Q₃ 已經頂住 '+orig[orig.length-1]+' 升唔到，只可以靠 Q₁ 跌。');
+  const t0=taskInfo();
+  if(t0 && t0.C.length && added.length && t0.C.every(x=>x[1])){
+    e.innerHTML='<div class="oneline" style="background:#e8f7ea;border-color:#8fc79a">'+
+      '<b style="color:var(--green)">✓ 而家已經滿足晒所有條件</b> —— '+
+      '記返個規律：你係喺 <span class="slot">'+zoneSummary(added,evalSet(data))+
+      '</span> 加 data 先得到呢個結果。</div>'; return;
+  }
+  const sol=advice();
+  if(sol===null){
+    extra.push('<span class="warn2">⚠ 實測：呢組數據做唔到呢個組合</span> —— 改一改設定，或者換一組數據。');
+  }else{
+    if(!advInReg && sol.length) extra.push('<span class="warn2">⚠ 呢組數據淨係咁唔夠</span>：'+
+        '實測仲要 '+zoneSummary(sol,cs)+'（撳「提示 3」睇實際數字）。');
+  }
   if(extra.length) s+='<div class="small" style="margin-top:8px">附加限制：'+
       extra.map(x=>'• '+x).join('<br>')+'</div>';
   s+='</div>';
@@ -580,22 +647,46 @@ function meets(arr){
   return numCmp(CFG.range,q.range,o.range)&&numCmp(CFG.median,q.q2,o.q2)&&
          modeCmp(CFG.mode,q.modes,o.modes)&&numCmp(CFG.iqr,q.iqr,o.iqr);
 }
-function trySolve(){
+function buildCand(c,k,restrict){
+  const mn=orig[0], mx=orig[orig.length-1];
+  const D=[...new Set(data)].sort((a,b)=>a-b);
+  let must=[];
+  if(CFG.range==='up')   must=must.concat([mn-1,mx+1,mn-2,mx+2]);
+  if(CFG.iqr==='up')     must=must.concat([mn,mx]);
+  if(CFG.median==='up')  must=must.concat([mx,D[D.length-2]]);
+  if(CFG.median==='down')must=must.concat([mn,D[1]]);
+  let rest=[...D];
+  for(let i=0;i<D.length-1;i++){
+    const a=D[i],b=D[i+1];
+    if(b-a>1) rest.push(Math.floor((a+b)/2));
+    if(b-a>2) rest.push(Math.ceil((a+b)/2));
+  }
+  D.forEach(v=>{ rest.push(v-1); rest.push(v+1); });
+  if(CFG.range!=='same') rest.push(mn-1,mn-2,mx+1,mx+2);
+  const keep=v=>Number.isFinite(v)&&(CFG.range==='same'?(v>=mn&&v<=mx):true)&&(!restrict||restrict(v));
+  must=[...new Set(must)].filter(keep);
+  rest=[...new Set(rest)].filter(keep).filter(v=>!must.includes(v));
+  if(CFG.iqr==='up') rest.sort((x,y)=>Math.abs(y-c.q2)-Math.abs(x-c.q2)||x-y);
+  else               rest.sort((x,y)=>Math.abs(x-c.q2)-Math.abs(y-c.q2)||x-y);
+  const cap = k>=7?10 : k>=5?14 : 22;
+  return must.concat(rest).slice(0,Math.max(cap,must.length));
+}
+function trySolve(restrict){
   const t=taskInfo(); if(!t) return null;
-  const o=t.o, mn=orig[0], mx=orig[orig.length-1];
-  let cand=[...new Set(orig)];
-  if(CFG.range!=='same'){ cand=cand.concat([mn-1,mn-2,mx+1,mx+2]); }
-  cand=[...new Set(cand)];
-  if(CFG.iqr==='up')      cand.sort((x,y)=>Math.abs(y-o.q2)-Math.abs(x-o.q2)||x-y);
-  else                    cand.sort((x,y)=>Math.abs(x-o.q2)-Math.abs(y-o.q2)||x-y);
-  const sizes = t.k!==null ? [t.k] : [1,2,3,4,5,6];
+  const c=evalSet(data);
+  const remain = (t.k!==null) ? t.k-added.length : null;
+  if(remain!==null && remain<0) return null;
+  if(remain===0) return meets(data)? [] : null;
+  const sizes = (remain!==null)? [remain] : [1,2,3,4,5,6];
   let guard=0, found=null;
   for(const k of sizes){
-    const cur=[];
+    const cand=buildCand(c,k,restrict);
+    if(!cand.length) continue;
+    const pick=[];
     const rec=(start)=>{
-      if(found||guard>400000) return;
-      if(cur.length===k){ guard++; if(meets(orig.concat(cur))) found=cur.slice(); return; }
-      for(let i=start;i<cand.length;i++){ cur.push(cand[i]); rec(i); cur.pop(); if(found) return; }
+      if(found||guard>600000) return;
+      if(pick.length===k){ guard++; if(meets(data.concat(pick))) found=pick.slice(); return; }
+      for(let i=start;i<cand.length;i++){ pick.push(cand[i]); rec(i); pick.pop(); if(found) return; }
     };
     rec(0);
     if(found) return found;
@@ -670,15 +761,17 @@ function hintHTML(lv){
     h='<b>Step 2：合埋一齊，應該點加</b><br>'+L2(o);
   }
   if(lv===3){
-    solution=trySolve();
+    solution=advice();
     if(!solution){
       h='<b>搵唔到答案。</b>可能係：<br>'+
         '• 條件互相衝突（例如 range 下跌係唔可能；或者 range 不變 + IQR 升）<br>'+
         '• 指定嘅 data 數目唔夠（試下加大 k，或者揀「唔限」）<br>'+
         '• 呢組數據太集中<br>試下改一改設定，或者換一組數據。';
     }else{
-      const a=orig.concat(solution).sort((x,y)=>x-y), nq=evalSet(a);
-      h='<b>一個可行答案</b>：加入 <span class="kbd">'+solution.join('、')+'</span><br>'+
+      if(!solution.length){ return '<div class="hintbox"><b>已經達標</b> —— 唔使再加。</div>'; }
+      const a=data.concat(solution).sort((x,y)=>x-y), nq=evalSet(a);
+      h='<b>仲要加</b>：<span class="kbd">'+solution.join('、')+'</span>'+
+        (added.length? '（除咗你已經加咗嘅 '+added.join('、')+'）':'')+'<br>'+
         '加完之後 ── Q₁ '+fmt(o.q1)+' → <b>'+fmt(nq.q1)+'</b>　·　Q₃ '+fmt(o.q3)+' → <b>'+fmt(nq.q3)+'</b><br>'+
         'IQR '+fmt(o.iqr)+' → <b>'+fmt(nq.iqr)+'</b>　·　中位數 '+fmt(o.q2)+' → '+fmt(nq.q2)+
         '　·　range '+fmt(o.range)+' → '+fmt(nq.range)+'　·　眾數 '+o.modes.vals.join('、')+
@@ -691,10 +784,10 @@ function hintHTML(lv){
   return '<div class="hintbox">'+h+'</div>';
 }
 function applySolution(){
-  if(!solution) return;
-  resetAll();
+  if(!solution||!solution.length) return;
+  pushHist();
   solution.forEach(v=>{data.push(v);added.push(v);});
-  data.sort((a,b)=>a-b); render(); hideHint();
+  data.sort((a,b)=>a-b); lastMove=null; render();
 }
 
 drawTable(); buildTable();
