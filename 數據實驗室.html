@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>數據實驗室</title>
+<style>
+:root{
+  --blue:#1a5fb4; --green:#2e7d32; --purple:#7b3fa0; --orange:#e07b00;
+  --red:#c62828; --grey:#5b6470; --bg:#f4f6fa; --card:#fff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:#1d232b;
+  font-family:-apple-system,"PingFang HK","Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size:17px;line-height:1.5;padding:10px 10px 60px}
+.wrap{max-width:1040px;margin:0 auto}
+h1{font-size:22px;margin:6px 0 2px}
+.sub{color:var(--grey);font-size:13px;margin-bottom:10px}
+.card{background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:12px;
+  box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.card h2{font-size:16px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.tag{background:#e9eefb;color:var(--blue);border-radius:6px;padding:1px 8px;font-size:12px}
+button{font:inherit;border:0;border-radius:11px;padding:11px 15px;background:#e9eefb;
+  color:var(--blue);font-weight:600;min-height:46px;cursor:pointer}
+button:active{transform:scale(.97)}
+button.primary{background:var(--blue);color:#fff}
+button.gr{background:var(--green);color:#fff}
+button.gh{background:#eee;color:#444}
+button.sm{padding:8px 12px;min-height:40px;font-size:15px}
+input,select,textarea{font:inherit;border:1.5px solid #ccd3de;border-radius:10px;
+  padding:10px 12px;background:#fff;min-height:46px;width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{flex:0 0 auto}
+.grow{flex:1 1 120px}
+
+/* ---------- pool ---------- */
+#poolWrap{overflow-x:auto;overflow-y:visible;padding:56px 4px 46px;-webkit-overflow-scrolling:touch}
+#pool{position:relative;height:66px;min-width:100%}
+.blk{position:absolute;top:0;width:44px;height:66px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:19px;
+  border:2px solid #9fb0c8;background:#e8eef8;transition:left .28s ease, background .2s}
+.blk.up{background:#e6f4e9;border-color:#8fc79a}
+.blk.mid{background:#eee;border-color:#bbb}
+.blk.new{box-shadow:0 0 0 3px #ffd58a;border-color:var(--orange)}
+.blk .pos{position:absolute;bottom:-20px;font-size:11px;color:#7a838f;font-weight:500}
+.blk.q1{border-color:var(--blue);border-width:3px}
+.blk.q2{border-color:var(--green);border-width:3px}
+.blk.q3{border-color:var(--purple);border-width:3px}
+.mk{position:absolute;top:-46px;transform:translateX(-50%);text-align:center;font-size:12px;
+  font-weight:700;white-space:nowrap;transition:left .28s ease}
+.mk .bar{width:3px;height:22px;margin:2px auto 0}
+.mk.q1{color:var(--blue)} .mk.q1 .bar{background:var(--blue)}
+.mk.q2{color:var(--green)} .mk.q2 .bar{background:var(--green)}
+.mk.q3{color:var(--purple)} .mk.q3 .bar{background:var(--purple)}
+.iqrbar{position:absolute;top:-12px;height:8px;border-radius:4px;background:rgba(198,40,40,.18);
+  border:1px solid rgba(198,40,40,.5);transition:left .28s ease,width .28s ease}
+
+/* ---------- stats ---------- */
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:#f2f5fa;border-radius:10px;padding:7px 11px;font-size:14px;min-width:78px}
+.chip b{display:block;font-size:19px}
+.chip.q1 b{color:var(--blue)} .chip.q2 b{color:var(--green)}
+.chip.q3 b{color:var(--purple)} .chip.iqr b{color:var(--red)}
+.delta{font-size:12px;font-weight:700}
+.up{color:var(--green)} .dn{color:var(--red)} .same{color:#8b949e}
+
+/* ---------- task ---------- */
+.cond{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:15px}
+.dot{width:22px;height:22px;border-radius:50%;background:#e2e6ec;color:#8b949e;
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex:0 0 auto}
+.dot.ok{background:#d8f1dc;color:var(--green)}
+.dot.no{background:#fbe1e1;color:var(--red)}
+.win{background:#e8f7ea;border:1.5px solid #8fc79a;border-radius:11px;padding:10px 12px;
+  margin-top:8px;font-weight:600;color:var(--green)}
+.hintbox{background:#fffaeb;border:1.5px solid #e8cf8a;border-radius:11px;padding:10px 12px;
+  margin-top:8px;font-size:15px;line-height:1.6}
+.hintbox b{color:#8a5a00}
+.warnbox{background:#fdeaea;border:1.5px solid #e2a5a5;border-radius:11px;padding:10px 12px;
+  margin-top:8px;font-size:15px}
+.small{font-size:13px;color:var(--grey)}
+table.dist{border-collapse:separate;border-spacing:6px 4px}
+table.dist th{font-size:13px;color:var(--grey);text-align:right;padding-right:4px;white-space:nowrap}
+table.dist input{width:70px;text-align:center;padding:8px 4px;min-height:44px;font-weight:700}
+table.dist input.f{font-weight:500}
+#dwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+#tabT.on,#tabL.on{background:var(--blue);color:#fff}
+table.cfg{width:100%;border-collapse:collapse}
+table.cfg td{padding:5px 2px;vertical-align:middle}
+table.cfg td.lb{width:96px;font-weight:700;font-size:15px}
+.seg{display:flex;gap:5px;flex-wrap:wrap}
+.seg button{padding:8px 10px;min-height:40px;font-size:14px;background:#eef1f6;color:#5b6470;font-weight:600}
+.seg button.on{background:var(--blue);color:#fff}
+.seg button.on.any{background:#aab3bf;color:#fff}
+.seg button.on.up{background:var(--green)}
+.seg button.on.down{background:var(--red)}
+.seg button.on.same{background:#5b6470}
+.kbd{display:inline-block;background:#eef1f6;border-radius:6px;padding:0 6px;font-weight:700}
+.oneline{background:#eef7ff;border:1.5px solid #a9c8ea;border-radius:12px;padding:12px 14px;
+  font-size:17px;line-height:1.75}
+.slot{background:#fff3c4;border-bottom:2px solid #e0a800;border-radius:5px;padding:1px 7px;
+  font-weight:800;color:#7a5000}
+.oneline b{color:#123c74}
+.oneline .warn2{color:var(--red);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>數據實驗室</h1>
+<div class="sub">輸入自己的數據 → 睇住 Q₁ / Q₂ / Q₃ 喺邊 → 試下加 data，睇 IQR 點郁</div>
+
+<!-- ============ 1. 建立數據 ============ -->
+<div class="card">
+  <h2><span class="tag">1</span> 建立數據池</h2>
+  <div class="row" style="margin-bottom:8px">
+    <button id="tabT" class="sm on" onclick="setTab('t')">分佈表輸入</button>
+    <button id="tabL" class="sm" onclick="setTab('l')">逐個輸入</button>
+  </div>
+
+  <div id="panelT">
+    <div id="disttbl"></div>
+    <div class="row" style="margin-top:8px">
+      <button class="sm" onclick="addCol()">＋ 加多一欄</button>
+      <button class="gh sm" onclick="delCol()">－ 刪最後一欄</button>
+      <button class="primary" onclick="buildTable()">建立</button>
+      <span class="small" id="tblsum"></span>
+    </div>
+  </div>
+
+  <div id="panelL" style="display:none">
+    <div class="row">
+      <input class="grow" id="raw" value="22, 23, 23, 24, 25, 25, 26, 27, 27, 28"
+             placeholder="用逗號或空格分隔，例如 3, 5, 7, 8, 12">
+      <button class="primary" onclick="build()">建立</button>
+      <button class="gh sm" onclick="randomSet()">隨機</button>
+    </div>
+  </div>
+
+  <div class="small" style="margin-top:6px">最多 60 個數據。建立之後，呢一組就係「原本的分佈」，之後加嘅 data 會用橙框標示。</div>
+</div>
+
+<!-- ============ 2. 數據池 ============ -->
+<div class="card">
+  <h2><span class="tag">2</span> 數據池（由細到大排好）</h2>
+  <div id="poolWrap"><div id="pool"></div></div>
+  <div class="row" id="jump" style="margin:2px 0 8px">
+    <span class="small">捲去：</span>
+    <button class="sm" onclick="jumpTo('q1i')" style="color:var(--blue)">Q₁</button>
+    <button class="sm" onclick="jumpTo('q2i')" style="color:var(--green)">Q₂</button>
+    <button class="sm" onclick="jumpTo('q3i')" style="color:var(--purple)">Q₃</button>
+    <button class="gh sm" onclick="jumpTo('start')">最左</button>
+    <button class="gh sm" onclick="jumpTo('end')">最右</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="small" id="posline" style="margin-top:8px"></div>
+  <div id="moveline"></div>
+</div>
+
+<!-- ============ 3. 加數據 ============ -->
+<div class="card">
+  <h2><span class="tag">3</span> 加入新數據</h2>
+  <div class="row">
+    <input class="grow" id="newv" type="number" inputmode="decimal" placeholder="輸入一個數值">
+    <button class="primary" onclick="addTyped()">加入</button>
+    <button class="gh sm" onclick="undo()">復原</button>
+    <button class="gh sm" onclick="resetAll()">重設</button>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <span class="small">快捷：</span>
+    <button class="sm" onclick="quick('min')">加最細值</button>
+    <button class="sm" onclick="quick('max')">加最大值</button>
+    <button class="sm" onclick="quick('mid')">加中間值</button>
+    <button class="sm" onclick="quick('lowmid')">加下半近中位數</button>
+    <button class="sm" onclick="quick('upmid')">加上半近中位數</button>
+  </div>
+</div>
+
+<!-- ============ 4. 任務 ============ -->
+<div class="card">
+  <h2><span class="tag">4</span> 任務：自己set條件</h2>
+  <div class="row" style="margin-bottom:8px">
+    <span class="small">快速套用：</span>
+    <button class="sm" onclick="preset('dse')">DSE 型</button>
+    <button class="sm" onclick="preset('down')">凈係 IQR 跌</button>
+    <button class="sm" onclick="preset('up')">凈係 IQR 升</button>
+    <button class="gh sm" onclick="preset('clear')">全部唔理</button>
+  </div>
+  <table class="cfg" id="cfgtbl"></table>
+  <div class="row" style="margin-top:8px">
+    <span class="small">要加幾多個 data：</span>
+    <select id="kadd" onchange="render()" style="width:auto;min-width:130px">
+      <option value="any">唔限（自由）</option>
+      <option value="2">剛好 2 個</option><option value="4" selected>剛好 4 個</option>
+      <option value="6">剛好 6 個</option><option value="8">剛好 8 個</option>
+    </select>
+  </div>
+  <div id="conds"></div>
+</div>
+
+<!-- ============ 5. 提示 ============ -->
+<div class="card">
+  <h2><span class="tag">5</span> 諗唔到？逐層開提示</h2>
+  <div class="row">
+    <button class="sm" onclick="showHint(1)">提示 1 · 應該望邊度</button>
+    <button class="sm" onclick="showHint(2)">提示 2 · 策略</button>
+    <button class="sm" onclick="showHint(3)">提示 3 · 直接畀答案</button>
+    <button class="gh sm" onclick="hideHint()">收埋</button>
+  </div>
+  <div id="hint"></div>
+</div>
+
+<div class="card">
+  <h2><span class="tag">☆</span> 一句話攻略（跟住你set嘅條件變）</h2>
+  <div id="oneline"></div>
+  <div class="small" style="margin-top:8px">
+    背後原理：IQR = Q₃ − Q₁ ——
+    <span style="color:var(--green);font-weight:700">一個升、一個跌</span>先有保證；
+    <span style="color:var(--red);font-weight:700">兩個一齊同方向郁 = 冇保證</span>。
+  </div>
+</div>
+
+</div>
+<script>
+/* ================= 狀態 ================= */
+let orig=[], data=[], added=[], history=[], lastMove=null;
+let cols=[{v:22,f:1},{v:23,f:2},{v:24,f:1},{v:25,f:2},{v:26,f:1},{v:27,f:2},{v:28,f:1}];
+const MAXN=60;
+function setTab(t){
+  document.getElementById('panelT').style.display = t==='t'?'':'none';
+  document.getElementById('panelL').style.display = t==='l'?'':'none';
+  document.getElementById('tabT').className='sm'+(t==='t'?' on':'');
+  document.getElementById('tabL').className='sm'+(t==='l'?' on':'');
+}
+function drawTable(){
+  const w=document.getElementById('disttbl');
+  let vs='<tr><th>數值</th>', fs='<tr><th>次數</th>';
+  cols.forEach((c,i)=>{
+    vs+='<td><input type="number" inputmode="numeric" value="'+c.v+
+        '" oninput="cols['+i+'].v=parseFloat(this.value);sumTable()"></td>';
+    fs+='<td><input class="f" type="number" inputmode="numeric" min="0" value="'+c.f+
+        '" oninput="cols['+i+'].f=parseInt(this.value||0);sumTable()"></td>';
+  });
+  w.innerHTML='<div id="dwrap"><table class="dist">'+vs+'</tr>'+fs+'</tr></table></div>';
+  sumTable();
+}
+function sumTable(){
+  const n=cols.reduce((s,c)=>s+(isNaN(c.f)?0:Math.max(0,c.f)),0);
+  const e=document.getElementById('tblsum');
+  e.innerHTML='合共 <b>'+n+'</b> 個數據'+(n>MAXN?' <span style="color:var(--red)">（超過 '+MAXN+'，會截去）</span>':'');
+}
+function addCol(){
+  if(cols.length>=15){alert('最多 15 欄');return;}
+  const last=cols[cols.length-1];
+  cols.push({v:(last?last.v+1:0),f:1}); drawTable();
+}
+function delCol(){ if(cols.length>1){cols.pop();drawTable();} }
+function buildTable(){
+  const a=[];
+  cols.forEach(c=>{ if(isNaN(c.v))return; const f=Math.max(0,Math.min(60,c.f||0));
+    for(let i=0;i<f;i++) a.push(c.v); });
+  if(a.length<4){alert('至少要 4 個數據');return;}
+  orig=a.sort((x,y)=>x-y).slice(0,MAXN);
+  data=orig.slice(); added=[]; history=[]; lastMove=null; hideHint(); syncTable(); render();
+}
+function syncTable(){                      // 由 orig 反過來砌返分佈表
+  const m=new Map(); orig.forEach(v=>m.set(v,(m.get(v)||0)+1));
+  cols=[...m.keys()].sort((a,b)=>a-b).map(v=>({v:v,f:m.get(v)}));
+  drawTable();
+}
+let W=44, G=8;                         // block width / gap（會按 n 自動縮細）
+
+/* ================= 四分位數（DSE 慣例） ================= */
+function medOf(a){const n=a.length; if(!n) return null;
+  return n%2 ? a[(n-1)/2] : (a[n/2-1]+a[n/2])/2;}
+function medIdx(n){return n%2 ? [(n-1)/2] : [n/2-1, n/2];}
+function quart(a){
+  const n=a.length; if(n<2) return null;
+  const h=Math.floor(n/2);
+  const lo=a.slice(0,h), up=a.slice(n-h);
+  const li=medIdx(h), ui=medIdx(h).map(i=>i+(n-h));
+  return {n:n, h:h,
+    q1:medOf(lo), q2:medOf(a), q3:medOf(up),
+    q1i:li, q2i:medIdx(n), q3i:ui,
+    iqr:medOf(up)-medOf(lo), range:a[n-1]-a[0]};
+}
+const fmt=x=> (x===null||x===undefined)?'—':(Math.round(x*100)/100);
+
+/* ================= 建立 / 修改 ================= */
+function build(){
+  const t=document.getElementById('raw').value;
+  const v=t.split(/[^0-9.\-]+/).filter(s=>s!=='').map(Number).filter(x=>!isNaN(x));
+  if(v.length<4){alert('至少要 4 個數據');return;}
+  orig=v.slice(0,MAXN).sort((a,b)=>a-b);
+  data=orig.slice(); added=[]; history=[]; lastMove=null; hideHint(); syncTable(); render();
+}
+function randomSet(){
+  const n=8+Math.floor(Math.random()*5), base=20+Math.floor(Math.random()*10), a=[];
+  for(let i=0;i<n;i++) a.push(base+Math.floor(Math.random()*7));
+  document.getElementById('raw').value=a.sort((x,y)=>x-y).join(', '); build();
+}
+function pushHist(){history.push({d:data.slice(),a:added.slice()});}
+function addValue(v){
+  if(data.length>=MAXN){alert('數據池最多 '+MAXN+' 個');return;}
+  const b=quart(data);
+  pushHist(); data.push(v); data.sort((a,b)=>a-b); added.push(v);
+  const a=quart(data);
+  lastMove=(b&&a)?{v:v,b:b,a:a}:null;
+  render();
+}
+function addTyped(){
+  const el=document.getElementById('newv'), v=parseFloat(el.value);
+  if(isNaN(v)){alert('請輸入一個數值');return;}
+  el.value=''; addValue(v);
+}
+function undo(){ if(!history.length) return; const s=history.pop(); data=s.d; added=s.a; lastMove=null; render(); }
+function resetAll(){ data=orig.slice(); added=[]; history=[]; lastMove=null; hideHint(); render(); }
+function quick(kind){
+  const q=quart(data); if(!q) return;
+  const mn=data[0], mx=data[data.length-1];
+  let v;
+  if(kind==='min') v=mn;
+  else if(kind==='max') v=mx;
+  else if(kind==='mid') v=Math.round((q.q1+q.q3)/2);
+  else if(kind==='lowmid') v=Math.floor(q.q2);
+  else v=Math.ceil(q.q2);
+  addValue(v);
+}
+
+function jumpTo(k){
+  const q=quart(data), w=document.getElementById('poolWrap'); if(!q) return;
+  if(k==='start'){w.scrollTo({left:0,behavior:'smooth'});return;}
+  if(k==='end'){w.scrollTo({left:w.scrollWidth,behavior:'smooth'});return;}
+  const idx=q[k], c=(idx.length===1? idx[0] : (idx[0]+idx[1])/2);
+  const x=c*(W+G)+W/2;
+  w.scrollTo({left:Math.max(0,x-w.clientWidth/2),behavior:'smooth'});
+}
+/* ================= 畫圖 ================= */
+function render(){
+  const pool=document.getElementById('pool');
+  pool.innerHTML='';
+  const q=quart(data);
+  const n=data.length;
+  W = n<=22?44 : n<=36?36 : 28;  G = n<=22?8 : n<=36?6 : 5;
+  pool.style.width=(n*(W+G))+'px';
+  const cx=i=> i*(W+G)+W/2;                     // block centre
+  const markX=arr=> arr.length===1?cx(arr[0]):(cx(arr[0])+cx(arr[1]))/2;
+
+  const usedNew=added.slice();
+  data.forEach((v,i)=>{
+    const d=document.createElement('div');
+    let cls='blk';
+    if(q){
+      if(n%2===1 && i===(n-1)/2) cls+=' mid';
+      else if(i>=n-q.h) cls+=' up';
+      if(q.q1i.includes(i)) cls+=' q1';
+      if(q.q2i.includes(i)) cls+=' q2';
+      if(q.q3i.includes(i)) cls+=' q3';
+    }
+    const k=usedNew.indexOf(v);
+    if(k>=0){cls+=' new'; usedNew.splice(k,1);}
+    d.className=cls; d.style.left=(i*(W+G))+'px'; d.style.width=W+'px';
+    d.style.fontSize=(W>=44?19:W>=36?16:13)+'px';
+    d.innerHTML=v+'<span class="pos">'+(i+1)+'</span>';
+    pool.appendChild(d);
+  });
+
+  if(q){
+    [['q1','Q₁',q.q1,q.q1i],['q2','Q₂',q.q2,q.q2i],['q3','Q₃',q.q3,q.q3i]].forEach(m=>{
+      const e=document.createElement('div');
+      e.className='mk '+m[0];
+      e.style.left=markX(m[3])+'px';
+      e.innerHTML=m[1]+' = '+fmt(m[2])+'<div class="bar"></div>';
+      pool.appendChild(e);
+    });
+    const b=document.createElement('div'); b.className='iqrbar';
+    b.style.left=markX(q.q1i)+'px'; b.style.width=(markX(q.q3i)-markX(q.q1i))+'px';
+    pool.appendChild(b);
+  }
+  drawChips(q); drawPos(q); drawConds(q); drawMove(); oneLiner(); if(shown.size) paintHints();
+}
+function arrow(b,a){ if(a>b) return '<span class="delta up">▲ 升到 '+fmt(a)+'</span>';
+  if(a<b) return '<span class="delta dn">▼ 跌到 '+fmt(a)+'</span>';
+  return '<span class="delta same">＝ 不變 ('+fmt(a)+')</span>'; }
+function drawMove(){
+  const e=document.getElementById('moveline'); if(!e) return;
+  if(!lastMove){e.innerHTML='';return;}
+  const m=lastMove;
+  e.innerHTML='<div class="hintbox" style="margin-top:10px"><b>上一步：你加咗 '+m.v+'</b><br>'+
+    'Q₁ '+fmt(m.b.q1)+' → '+arrow(m.b.q1,m.a.q1)+'　·　'+
+    'Q₃ '+fmt(m.b.q3)+' → '+arrow(m.b.q3,m.a.q3)+'　·　'+
+    'IQR '+fmt(m.b.iqr)+' → '+arrow(m.b.iqr,m.a.iqr)+'</div>';
+}
+function dspan(now,was){
+  if(was===null||was===undefined) return '';
+  const d=Math.round((now-was)*100)/100;
+  if(d>0) return '<span class="delta up">▲ +'+d+'</span>';
+  if(d<0) return '<span class="delta dn">▼ '+d+'</span>';
+  return '<span class="delta same">＝ 不變</span>';
+}
+function drawChips(q){
+  const o=quart(orig), c=document.getElementById('chips');
+  if(!q){c.innerHTML='';return;}
+  c.innerHTML=
+   '<div class="chip">n<b>'+q.n+'</b>'+dspan(q.n,o?o.n:null)+'</div>'+
+   '<div class="chip q1">Q₁<b>'+fmt(q.q1)+'</b>'+dspan(q.q1,o?o.q1:null)+'</div>'+
+   '<div class="chip q2">Q₂ 中位數<b>'+fmt(q.q2)+'</b>'+dspan(q.q2,o?o.q2:null)+'</div>'+
+   '<div class="chip q3">Q₃<b>'+fmt(q.q3)+'</b>'+dspan(q.q3,o?o.q3:null)+'</div>'+
+   '<div class="chip iqr">IQR<b>'+fmt(q.iqr)+'</b>'+dspan(q.iqr,o?o.iqr:null)+'</div>'+
+   '<div class="chip">分佈域 range<b>'+fmt(q.range)+'</b>'+dspan(q.range,o?o.range:null)+'</div>'+
+   '<div class="chip">眾數 mode<b style="font-size:16px">'+modesOf(data).vals.join('、')+
+   '</b><span class="delta same">'+modesOf(data).freq+' 次</span></div>';
+}
+function ordinal(a){return a.map(i=>'第 '+(i+1)+' 個').join(' 同 ');}
+function drawPos(q){
+  const e=document.getElementById('posline');
+  if(!q){e.textContent='';return;}
+  e.innerHTML='n = '+q.n+'　｜　下半 = 頭 '+q.h+' 個，上半 = 尾 '+q.h+' 個'+
+    (q.n%2? '（中位數嗰個要剔走）':'')+'<br>'+
+    'Q₁ = '+ordinal(q.q1i)+'　·　Q₂ = '+ordinal(q.q2i)+'　·　Q₃ = '+ordinal(q.q3i);
+}
+
+/* ================= 任務設定 ================= */
+const CFG={range:'any',median:'same',mode:'any',iqr:'down'};
+const LABEL={range:'分佈域 range',median:'中位數 median',mode:'眾數 mode',iqr:'IQR'};
+const OPT=[['any','唔理','any'],['same','不變','same'],['up','上升','up'],['down','下跌','down']];
+function preset(k){
+  if(k==='dse'){Object.assign(CFG,{range:'same',median:'same',mode:'any',iqr:'down'});
+    document.getElementById('kadd').value='4';}
+  if(k==='down')Object.assign(CFG,{range:'any',median:'any',mode:'any',iqr:'down'});
+  if(k==='up')  Object.assign(CFG,{range:'any',median:'any',mode:'any',iqr:'up'});
+  if(k==='clear')Object.assign(CFG,{range:'any',median:'any',mode:'any',iqr:'any'});
+  hideHint(); render();
+}
+function setCfg(f,v){CFG[f]=v;hideHint();render();}
+function drawCfg(){
+  const t=document.getElementById('cfgtbl');
+  t.innerHTML=['range','median','mode','iqr'].map(f=>
+    '<tr><td class="lb">'+LABEL[f]+'</td><td><div class="seg">'+
+    OPT.map(o=>'<button class="'+(CFG[f]===o[0]?'on '+o[2]:'')+'" onclick="setCfg(\''+f+'\',\''+o[0]+'\')">'+
+      o[1]+'</button>').join('')+'</div></td></tr>').join('');
+}
+
+/* ================= 眾數 ================= */
+function modesOf(a){
+  const m=new Map(); a.forEach(v=>m.set(v,(m.get(v)||0)+1));
+  const mx=Math.max(...m.values());
+  return {vals:[...m.keys()].filter(v=>m.get(v)===mx).sort((x,y)=>x-y),freq:mx};
+}
+const sameArr=(x,y)=>x.length===y.length&&x.every((v,i)=>v===y[i]);
+function modeCmp(want,nw,od){
+  if(want==='same') return sameArr(nw.vals,od.vals);
+  if(want==='up')   return Math.min(...nw.vals)>Math.max(...od.vals);
+  if(want==='down') return Math.max(...nw.vals)<Math.min(...od.vals);
+  return true;
+}
+function numCmp(want,n,o){
+  if(want==='same') return n===o;
+  if(want==='up')   return n>o;
+  if(want==='down') return n<o;
+  return true;
+}
+const modeTxt=m=>m.vals.join('、')+'（各出現 '+m.freq+' 次）';
+
+/* ================= 判定 ================= */
+function evalSet(arr){                       // arr = 完整數據
+  const q=quart(arr); if(!q) return null;
+  q.modes=modesOf(arr); return q;
+}
+function taskInfo(){
+  const q=evalSet(data), o=evalSet(orig); if(!q||!o) return null;
+  const kv=document.getElementById('kadd').value;
+  const k=(kv==='any')?null:+kv;
+  const C=[];
+  if(k!==null) C.push(['加咗剛好 '+k+' 個 data',added.length===k,'而家加咗 '+added.length+' 個']);
+  if(CFG.range!=='any') C.push(['分佈域 range '+w2(CFG.range),numCmp(CFG.range,q.range,o.range),
+      '而家 '+fmt(q.range)+'，原本 '+fmt(o.range)]);
+  if(CFG.median!=='any') C.push(['中位數 '+w2(CFG.median),numCmp(CFG.median,q.q2,o.q2),
+      '而家 '+fmt(q.q2)+'，原本 '+fmt(o.q2)]);
+  if(CFG.mode!=='any') C.push(['眾數 '+w2(CFG.mode),modeCmp(CFG.mode,q.modes,o.modes),
+      '而家 '+modeTxt(q.modes)+'，原本 '+modeTxt(o.modes)]);
+  if(CFG.iqr!=='any') C.push(['IQR '+w2(CFG.iqr),numCmp(CFG.iqr,q.iqr,o.iqr),
+      '而家 '+fmt(q.iqr)+'，原本 '+fmt(o.iqr)]);
+  return {k:k,q:q,o:o,C:C};
+}
+const w2=v=>({same:'不變',up:'上升',down:'下跌'})[v];
+function drawConds(){
+  drawCfg();
+  const t=taskInfo(), e=document.getElementById('conds');
+  if(!t){e.innerHTML='';return;}
+  if(!t.C.length){e.innerHTML='<div class="small">而家冇任何條件 —— 自由試玩模式。</div>';return;}
+  let h='';
+  t.C.forEach(c=>{h+='<div class="cond"><span class="dot '+(c[1]?'ok':'no')+'">'+
+      (c[1]?'✓':'·')+'</span><span>'+c[0]+'　<span class="small">（'+c[2]+'）</span></span></div>';});
+  if(CFG.median==='same'&&added.length){
+    const m=t.o.q2, lo=added.filter(v=>v<m).length, eq=added.filter(v=>v===m).length,
+          up=added.filter(v=>v>m).length;
+    h+='<div class="small" style="margin-top:6px">你加咗嘅 data：細過中位數 <b>'+lo+
+       '</b> · 等於中位數 <b>'+eq+'</b> · 大過中位數 <b>'+up+'</b>'+
+       '<br><span style="color:#8b949e">median 要唔變 ⇒ 落下半、落上半嘅數目要平衡</span></div>';
+  }
+  if(added.length&&t.C.every(c=>c[1])) h+='<div class="win">🎉 全部條件達成！'+
+      'Q₁ '+fmt(t.o.q1)+' → '+fmt(t.q.q1)+'，Q₃ '+fmt(t.o.q3)+' → '+fmt(t.q.q3)+
+      '，IQR '+fmt(t.o.iqr)+' → '+fmt(t.q.iqr)+'。</div>';
+  e.innerHTML=h;
+}
+
+/* ================= 一句話攻略 ================= */
+function nearestBelow(m){const a=orig.filter(v=>v<=m);return a.length?a[a.length-1]:orig[0];}
+function nearestAbove(m){const a=orig.filter(v=>v>=m);return a.length?a[0]:orig[orig.length-1];}
+function whereText(o){
+  const mn=orig[0], mx=orig[orig.length-1], m=o.q2;
+  const lo=nearestBelow(m), hi=nearestAbove(m);
+  if(CFG.iqr==='down'){
+    if(CFG.median==='same')
+      return '中位數 '+fmt(m)+' 嘅兩邊、<b>貼到最實</b>嗰度'+
+             (lo===hi? '（即係 '+lo+' 呢個值）' : '（即係 '+lo+' 或者 '+hi+'）');
+    if(CFG.median==='up')   return '中位數 '+fmt(m)+' 同 Q₃('+fmt(o.q3)+') 之間';
+    if(CFG.median==='down') return 'Q₁('+fmt(o.q1)+') 同中位數 '+fmt(m)+' 之間';
+    return 'Q₁('+fmt(o.q1)+') 同 Q₃('+fmt(o.q3)+') 之間';
+  }
+  if(CFG.iqr==='up'){
+    const ends = (CFG.range==='same')
+      ? '最細值 '+mn+' 同最大值 '+mx+' 嗰兩格（唔可以出界）'
+      : '細過 '+mn+' 同大過 '+mx+' 嘅兩端';
+    return ends+'，左右<b>一半一半</b>';
+  }
+  if(CFG.iqr==='same')
+    return '兩邊對稱咁加，令 Q₁、Q₃ 兩個位置坐返 '+fmt(o.q1)+' 同 '+fmt(o.q3);
+  if(CFG.mode==='up')   return '同一個<b>大過</b> '+o.modes.vals.join('、')+' 嘅值（集中火力加）';
+  if(CFG.mode==='down') return '同一個<b>細過</b> '+o.modes.vals.join('、')+' 嘅值（集中火力加）';
+  if(CFG.median==='up') return '上半（大過 '+fmt(m)+' ）嗰邊';
+  if(CFG.median==='down')return '下半（細過 '+fmt(m)+' ）嗰邊';
+  return '任何位置';
+}
+function oneLiner(){
+  const e=document.getElementById('oneline'); if(!e) return;
+  const o=evalSet(orig); if(!o){e.innerHTML='';return;}
+  const keep=[], move=[];
+  const nm={range:'分佈域 range',median:'中位數 median',mode:'眾數 mode',iqr:'IQR'};
+  ['range','median','mode','iqr'].forEach(f=>{
+    if(CFG[f]==='same') keep.push(nm[f]);
+    else if(CFG[f]==='up') move.push(nm[f]+' 要<b>升</b>');
+    else if(CFG[f]==='down') move.push(nm[f]+' 要<b>跌</b>');
+  });
+  if(!keep.length&&!move.length){
+    e.innerHTML='<div class="oneline">上面未揀任何條件 —— 揀返「邊樣唔變、邊樣要變」，'+
+      '呢度就會即刻寫出攻略句。</div>'; return;
+  }
+  if(CFG.range==='down'){
+    e.innerHTML='<div class="oneline"><span class="warn2">⚠ range 下跌係做唔到嘅</span> —— '+
+      '加 data 只會令分佈域維持或者變大。改返呢個設定先。</div>'; return;
+  }
+  const kv=document.getElementById('kadd').value;
+  const kTxt=(kv==='any')?'':'（要加剛好 '+kv+' 個）';
+  let s='<div class="oneline">如果 ';
+  s+= keep.length? '<b>'+keep.join('、')+'</b> 不變' : '<b>冇嘢</b>要保持不變';
+  s+= move.length? '，而 '+move.join('、')+'，' : '，';
+  s+= '<br>就要先嘗試喺 <span class="slot">'+whereText(o)+'</span> 加 data'+kTxt+'，';
+  s+= '<br>再<b>數多一次</b> Q₁、Q₃ 係第幾個，睇下啱唔啱。';
+  const extra=[];
+  if(CFG.median==='same') extra.push('median 唔變 ⇒ 落下半、落上半嘅數目要<b>一半一半</b>。');
+  if(CFG.range==='same')  extra.push('range 唔變 ⇒ 唔可以細過 '+orig[0]+' 或者大過 '+orig[orig.length-1]+'。');
+  if(CFG.mode==='up'||CFG.mode==='down')
+    extra.push('mode 要'+w2(CFG.mode)+' ⇒ 另外要<b>集中火力</b>加同一個'+
+      (CFG.mode==='up'?'大過':'細過')+' '+o.modes.vals.join('、')+' 嘅值（加到超過 '+o.modes.freq+
+      ' 次），同上面嘅位置要求可能有衝突，要試。');
+  if(CFG.mode==='same')   extra.push('mode 唔變 ⇒ 唔好一次過加太多同一個值（唔可以追過 '+o.modes.freq+' 次）。');
+  if(CFG.range==='same'&&CFG.iqr==='up')
+    extra.push('<span class="warn2">呢個組合好可能做唔到</span>：Q₃ 已經頂住 '+orig[orig.length-1]+' 升唔到，只可以靠 Q₁ 跌。');
+  if(extra.length) s+='<div class="small" style="margin-top:8px">附加限制：'+
+      extra.map(x=>'• '+x).join('<br>')+'</div>';
+  s+='</div>';
+  e.innerHTML=s;
+}
+
+/* ================= 搜尋答案 ================= */
+function meets(arr){
+  arr=arr.slice().sort((x,y)=>x-y);
+  const q=evalSet(arr), o=evalSet(orig);
+  return numCmp(CFG.range,q.range,o.range)&&numCmp(CFG.median,q.q2,o.q2)&&
+         modeCmp(CFG.mode,q.modes,o.modes)&&numCmp(CFG.iqr,q.iqr,o.iqr);
+}
+function trySolve(){
+  const t=taskInfo(); if(!t) return null;
+  const o=t.o, mn=orig[0], mx=orig[orig.length-1];
+  let cand=[...new Set(orig)];
+  if(CFG.range!=='same'){ cand=cand.concat([mn-1,mn-2,mx+1,mx+2]); }
+  cand=[...new Set(cand)];
+  if(CFG.iqr==='up')      cand.sort((x,y)=>Math.abs(y-o.q2)-Math.abs(x-o.q2)||x-y);
+  else                    cand.sort((x,y)=>Math.abs(x-o.q2)-Math.abs(y-o.q2)||x-y);
+  const sizes = t.k!==null ? [t.k] : [1,2,3,4,5,6];
+  let guard=0, found=null;
+  for(const k of sizes){
+    const cur=[];
+    const rec=(start)=>{
+      if(found||guard>400000) return;
+      if(cur.length===k){ guard++; if(meets(orig.concat(cur))) found=cur.slice(); return; }
+      for(let i=start;i<cand.length;i++){ cur.push(cand[i]); rec(i); cur.pop(); if(found) return; }
+    };
+    rec(0);
+    if(found) return found;
+  }
+  return null;
+}
+let solution=null;
+
+/* ================= 提示 ================= */
+let shown=new Set();
+function hideHint(){shown.clear();const e=document.getElementById('hint');if(e)e.innerHTML='';}
+function L1(f,o){
+  const mn=orig[0], mx=orig[orig.length-1];
+  const T={
+   range:{same:'新加嘅 data <b>全部要喺 '+mn+' 到 '+mx+' 之間</b>（最細、最大都唔可以被取代）。',
+          up:'<b>至少要有一個</b> data 細過 '+mn+'，或者大過 '+mx+'。',
+          down:'⚠ <b>做唔到</b> —— 加 data 只會令 range 維持或者變大，冇可能變細。'},
+   median:{same:'「≤ 中位數」嘅個數會被<b>鎖死</b> ⇒ 新 data 要<b>一半落下半、一半落上半</b>。',
+           up:'要令中間嗰個位置坐住更大嘅值 ⇒ <b>大部分新 data 要落上半</b>（大過 '+fmt(o.q2)+'）。',
+           down:'要令中間嗰個位置坐住更細嘅值 ⇒ <b>大部分新 data 要落下半</b>（細過 '+fmt(o.q2)+'）。'},
+   mode:{same:'原本眾數係 '+modeTxt(o.modes)+' ⇒ <b>唔可以</b>令另一個值嘅次數追過 '+o.modes.freq+' 次。',
+         up:'要令一個<b>大過</b> '+o.modes.vals.join('、')+' 嘅值，出現次數<b>超過</b> '+o.modes.freq+' 次。',
+         down:'要令一個<b>細過</b> '+o.modes.vals.join('、')+' 嘅值，出現次數<b>超過</b> '+o.modes.freq+' 次。'},
+   iqr:{same:'Q₁、Q₃ 兩個位置坐住嘅值要維持返 '+fmt(o.q1)+' 同 '+fmt(o.q3)+'。',
+        up:'要 <b>Q₁ 跌</b> 或者 <b>Q₃ 升</b>（最好一齊發生）。',
+        down:'要 <b>Q₁ 升</b> 或者 <b>Q₃ 跌</b>（最好一齊發生）。'}
+  };
+  return T[f][CFG[f]];
+}
+function L2(o){
+  const mn=orig[0], mx=orig[orig.length-1], out=[];
+  if(CFG.iqr==='down') out.push('<b>IQR 跌 ⇒ 向內夾</b>：加喺 Q₁('+fmt(o.q1)+') 同 Q₃('+fmt(o.q3)+') 之間。');
+  if(CFG.iqr==='up')   out.push('<b>IQR 升 ⇒ 向外撐</b>：一半加喺最細嗰邊，一半加喺最大嗰邊。'+
+                                '<span class="small">（千祈唔好全部加同一邊）</span>');
+  if(CFG.iqr==='same') out.push('<b>IQR 不變</b>：加喺 Q₁ 以下同 Q₃ 以上<b>數目要夾啱</b>，令兩個位置坐返同一個值。');
+  if(CFG.median==='same'&&CFG.iqr==='down')
+    out.push('配 <b>median 不變</b> ⇒ 一半落下半、一半落上半，而且<b>兩堆都貼住中位數塞</b>（'+fmt(o.q2)+' 附近）。');
+  if(CFG.median==='same'&&CFG.iqr==='up')
+    out.push('配 <b>median 不變</b> ⇒ 一半落下半但塞去<b>最細</b>，一半落上半但塞去<b>最大</b>。');
+  if(CFG.range==='same'&&CFG.iqr==='up')
+    out.push('⚠ 配 <b>range 不變</b>：唔可以出界，Q₃ 好多時已經頂住 '+mx+' 升唔到，'+
+             '所以要靠 <b>Q₁ 跌</b>（多加啲近 '+mn+' 嘅值）。有機會做唔到。');
+  if(CFG.mode==='same'&&(CFG.iqr==='down'))
+    out.push('配 <b>mode 不變</b>：中間嗰啲值唔好一次過加太多同一個數字，'+
+             '分散加喺 '+fmt(o.q1)+'～'+fmt(o.q3)+' 之間唔同嘅值。');
+  if(CFG.mode==='up'||CFG.mode==='down')
+    out.push('<b>mode 要郁</b> ⇒ 一定要<b>集中火力</b>加同一個值（至少加到超過 '+o.modes.freq+' 次），'+
+             '再檢查會唔會撞到 median／IQR 嘅條件。');
+  if(CFG.range==='down') out.push('⚠ <b>range 下跌係唔可能</b>嘅，請改返呢個設定。');
+  if(!out.length) out.push('而家冇設任何條件，隨便試下加 data，睇住 Q₁、Q₃ 點郁。');
+  return out.map(s=>'• '+s).join('<br>');
+}
+function showHint(lv){ shown.add(lv); paintHints(); }
+function paintHints(){
+  const box=document.getElementById('hint');
+  box.innerHTML=[...shown].sort().map(l=>hintHTML(l)).join('');
+}
+function hintHTML(lv){
+  const t=taskInfo();
+  if(!t) return '<div class="hintbox">先建立數據池。</div>';
+  const q=t.q, o=t.o; let h='';
+
+  if(lv===1){
+    h='<b>Step 1：把每個條件翻譯成「位置／人數」</b><br>'+
+      '而家 n = '+q.n+'，Q₁ = '+ordinal(q.q1i)+'，Q₂ = '+ordinal(q.q2i)+'，Q₃ = '+ordinal(q.q3i)+
+      '，IQR = '+fmt(q.q3)+' − '+fmt(q.q1)+' = <b>'+fmt(q.iqr)+'</b>。<br><br>';
+    const rows=['range','median','mode','iqr'].filter(f=>CFG[f]!=='any');
+    if(!rows.length) h+='你未揀任何條件 —— 上面揀返幾個先。';
+    else h+=rows.map(f=>'<b>'+LABEL[f]+' '+w2(CFG[f])+'</b> ⇒ '+L1(f,o)).join('<br><br>');
+  }
+  if(lv===2){
+    h='<b>Step 2：合埋一齊，應該點加</b><br>'+L2(o);
+  }
+  if(lv===3){
+    solution=trySolve();
+    if(!solution){
+      h='<b>搵唔到答案。</b>可能係：<br>'+
+        '• 條件互相衝突（例如 range 下跌係唔可能；或者 range 不變 + IQR 升）<br>'+
+        '• 指定嘅 data 數目唔夠（試下加大 k，或者揀「唔限」）<br>'+
+        '• 呢組數據太集中<br>試下改一改設定，或者換一組數據。';
+    }else{
+      const a=orig.concat(solution).sort((x,y)=>x-y), nq=evalSet(a);
+      h='<b>一個可行答案</b>：加入 <span class="kbd">'+solution.join('、')+'</span><br>'+
+        '加完之後 ── Q₁ '+fmt(o.q1)+' → <b>'+fmt(nq.q1)+'</b>　·　Q₃ '+fmt(o.q3)+' → <b>'+fmt(nq.q3)+'</b><br>'+
+        'IQR '+fmt(o.iqr)+' → <b>'+fmt(nq.iqr)+'</b>　·　中位數 '+fmt(o.q2)+' → '+fmt(nq.q2)+
+        '　·　range '+fmt(o.range)+' → '+fmt(nq.range)+'　·　眾數 '+o.modes.vals.join('、')+
+        ' → '+nq.modes.vals.join('、')+
+        '<div class="row" style="margin-top:8px">'+
+        '<button class="gr sm" onclick="applySolution()">幫我加落去</button>'+
+        '<span class="small">建議自己先試，再對答案。</span></div>';
+    }
+  }
+  return '<div class="hintbox">'+h+'</div>';
+}
+function applySolution(){
+  if(!solution) return;
+  resetAll();
+  solution.forEach(v=>{data.push(v);added.push(v);});
+  data.sort((a,b)=>a-b); render(); hideHint();
+}
+
+drawTable(); buildTable();
+</script>
+</body>
+</html>
