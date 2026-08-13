@@ -94,6 +94,55 @@ table.cfg td.lb{width:96px;font-weight:700;font-size:15px}
 .seg button.on.up{background:var(--green)}
 .seg button.on.down{background:var(--red)}
 .seg button.on.same{background:#5b6470}
+.lvsep{border-top:1px dashed #ccd3de;margin:12px 0 10px}
+#treewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+.tree,.tree ul{padding:0;margin:0}
+.tree ul{display:flex;justify-content:center;position:relative;padding-top:18px}
+.tree li{list-style:none;position:relative;padding:18px 5px 0;text-align:center}
+.tree li::before,.tree li::after{content:'';position:absolute;top:0;right:50%;
+  border-top:2px solid #c7d2e0;width:50%;height:18px}
+.tree li::after{right:auto;left:50%;border-left:2px solid #c7d2e0}
+.tree li:only-child{padding-top:0}
+.tree li:only-child::after,.tree li:only-child::before{display:none}
+.tree li:first-child::before,.tree li:last-child::after{border:0 none}
+.tree li:last-child::before{border-right:2px solid #c7d2e0;border-radius:0 7px 0 0}
+.tree li:first-child::after{border-radius:7px 0 0 0}
+.tree ul ul::before{content:'';position:absolute;top:0;left:50%;
+  border-left:2px solid #c7d2e0;width:0;height:18px}
+.nd{display:inline-block;border:1.5px solid #c7d2e0;background:#fff;border-radius:10px;
+  padding:7px 10px;font-size:13.5px;line-height:1.45;min-width:96px;max-width:190px}
+.nd .t{font-weight:800;color:#33465f}
+.nd .s{font-size:12px;color:var(--grey);display:block;margin-top:2px}
+.nd.root{background:#eef3fb;border-color:#a9c8ea;font-size:15px}
+.nd.leaf{background:#fff8e6;border-color:#e0c76a}
+.nd.on{border-width:2.5px;box-shadow:0 0 0 3px rgba(26,95,180,.13)}
+.nd.on.root{background:#dfeafd}
+.nd.on.dir{background:#e8f7ea;border-color:#8fc79a}
+.nd.on.leaf{background:#ffeeba;border-color:#e0a800}
+.nd.dim{opacity:.42}
+.treefoot{text-align:center;font-size:13px;color:var(--grey);margin-top:8px}
+.stair{display:flex;flex-direction:column;align-items:center}
+.slev{display:flex;flex-direction:column;align-items:center}
+.sq{font-size:13.5px;font-weight:800;color:#33465f;margin-bottom:6px;text-align:center}
+.sq .no{background:#1a5fb4;color:#fff;border-radius:50%;display:inline-block;
+  width:20px;height:20px;line-height:20px;font-size:12px;margin-right:6px}
+.srow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.arw{color:#b9c6d8;font-size:20px;line-height:1;margin:7px 0 9px}
+.nd.concl{background:#e8f7ea;border-color:#8fc79a;max-width:520px;font-size:14px}
+.nd.concl.bad{background:#fdeaea;border-color:#e2a5a5}
+.whybox{background:#fff;border:1.5px dashed #d9a6a6;border-radius:10px;padding:9px 11px;
+  margin-top:8px;font-size:13.5px;line-height:1.65;text-align:left}
+.whybox b{color:#a03}
+.whyq{margin-top:6px}
+.lvhead{font-size:15px;font-weight:700;color:var(--blue);margin-bottom:7px}
+#lvwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.live{border-collapse:collapse;font-size:15px}
+table.live th,table.live td{border:1px solid #b9c3d0;padding:7px 10px;text-align:center;
+  white-space:nowrap;min-width:46px}
+table.live th{background:#eef3fb;color:#33465f;font-size:13px;text-align:right;min-width:66px}
+table.live td.add{background:#fff3e0;color:#b35c00;font-weight:800}
+table.live td.tot{background:#f2f5fa;font-weight:800}
+table.live .plus{font-size:11px;color:var(--orange);display:block;font-weight:700}
 .kbd{display:inline-block;background:#eef1f6;border-radius:6px;padding:0 6px;font-weight:700}
 .oneline{background:#eef7ff;border:1.5px solid #a9c8ea;border-radius:12px;padding:12px 14px;
   font-size:17px;line-height:1.75}
@@ -116,7 +165,6 @@ table.cfg td.lb{width:96px;font-weight:700;font-size:15px}
     <button id="tabT" class="sm on" onclick="setTab('t')">分佈表輸入</button>
     <button id="tabL" class="sm" onclick="setTab('l')">逐個輸入</button>
   </div>
-
   <div id="panelT">
     <div id="disttbl"></div>
     <div class="row" style="margin-top:8px">
@@ -126,7 +174,6 @@ table.cfg td.lb{width:96px;font-weight:700;font-size:15px}
       <span class="small" id="tblsum"></span>
     </div>
   </div>
-
   <div id="panelL" style="display:none">
     <div class="row">
       <input class="grow" id="raw" value="22, 23, 23, 24, 25, 25, 26, 27, 27, 28"
@@ -135,8 +182,11 @@ table.cfg td.lb{width:96px;font-weight:700;font-size:15px}
       <button class="gh sm" onclick="randomSet()">隨機</button>
     </div>
   </div>
+  <div class="small" style="margin-top:6px">最多 60 個數據。建立之後，呢一組就係「原本的分佈」，之後加嘅 data 會用橙色標示。</div>
 
-  <div class="small" style="margin-top:6px">最多 60 個數據。建立之後，呢一組就係「原本的分佈」，之後加嘅 data 會用橙框標示。</div>
+  <div class="lvsep"></div>
+  <div class="lvhead">而家嘅分佈表（實時）</div>
+  <div id="livetbl"></div>
 </div>
 
 <!-- ============ 2. 數據池 ============ -->
@@ -212,6 +262,9 @@ table.cfg td.lb{width:96px;font-weight:700;font-size:15px}
 <div class="card">
   <h2><span class="tag">☆</span> 一句話攻略（跟住你set嘅條件變）</h2>
   <div id="oneline"></div>
+  <div class="lvsep"></div>
+  <div class="lvhead">思考樹：由上而下問自己</div>
+  <div id="treewrap"><div id="tree"></div></div>
   <div class="small" style="margin-top:8px">
     背後原理：IQR = Q₃ − Q₁ ——
     <span style="color:var(--green);font-weight:700">一個升、一個跌</span>先有保證；
@@ -334,6 +387,25 @@ function jumpTo(k){
   const x=c*(W+G)+W/2;
   w.scrollTo({left:Math.max(0,x-w.clientWidth/2),behavior:'smooth'});
 }
+function drawLive(){
+  const w=document.getElementById('livetbl'); if(!w) return;
+  if(!data.length){w.innerHTML='';return;}
+  const co=new Map(), cd=new Map();
+  orig.forEach(v=>co.set(v,(co.get(v)||0)+1));
+  data.forEach(v=>cd.set(v,(cd.get(v)||0)+1));
+  const vals=[...cd.keys()].sort((a,b)=>a-b);
+  let r1='<tr><th>數值</th>', r2='<tr><th>次數</th>';
+  vals.forEach(v=>{
+    const f=cd.get(v), f0=co.get(v)||0, d=f-f0;
+    r1+='<td'+(d>0?' class="add"':'')+'>'+v+'</td>';
+    r2+='<td'+(d>0?' class="add"':'')+'>'+f+(d>0?'<span class="plus">+'+d+'</span>':'')+'</td>';
+  });
+  r1+='<td class="tot">合計</td>'; r2+='<td class="tot">'+data.length+'</td>';
+  w.innerHTML='<div id="lvwrap"><table class="live">'+r1+'</tr>'+r2+'</tr></table></div>'+
+    '<div class="small" style="margin-top:6px">橙色 = 你之後加入嘅 data'+
+    (added.length? '（已加 '+added.length+' 個：'+added.slice().sort((a,b)=>a-b).join('、')+'）'
+                 : '（暫時未加）')+'</div>';
+}
 /* ================= 畫圖 ================= */
 function render(){
   const pool=document.getElementById('pool');
@@ -376,7 +448,7 @@ function render(){
     b.style.left=markX(q.q1i)+'px'; b.style.width=(markX(q.q3i)-markX(q.q1i))+'px';
     pool.appendChild(b);
   }
-  drawChips(q); drawPos(q); drawConds(q); drawMove(); oneLiner(); if(shown.size) paintHints();
+  drawChips(q); drawPos(q); drawConds(q); drawMove(); drawLive(); oneLiner(); drawTree(); if(shown.size) paintHints();
 }
 function arrow(b,a){ if(a>b) return '<span class="delta up">▲ 升到 '+fmt(a)+'</span>';
   if(a<b) return '<span class="delta dn">▼ 跌到 '+fmt(a)+'</span>';
@@ -407,8 +479,10 @@ function drawChips(q){
    '<div class="chip q3">Q₃<b>'+fmt(q.q3)+'</b>'+dspan(q.q3,o?o.q3:null)+'</div>'+
    '<div class="chip iqr">IQR<b>'+fmt(q.iqr)+'</b>'+dspan(q.iqr,o?o.iqr:null)+'</div>'+
    '<div class="chip">分佈域 range<b>'+fmt(q.range)+'</b>'+dspan(q.range,o?o.range:null)+'</div>'+
-   '<div class="chip">眾數 mode<b style="font-size:16px">'+modesOf(data).vals.join('、')+
-   '</b><span class="delta same">'+modesOf(data).freq+' 次</span></div>';
+   (()=>{const m=modesOf(data);
+     return '<div class="chip">眾數 mode<b style="font-size:16px">'+
+       (m.none?'冇':m.vals.join('、'))+'</b><span class="delta same">'+
+       (m.none?'0 個':m.count+' 個 · 各 '+m.freq+' 次')+'</span></div>';})();
 }
 function ordinal(a){return a.map(i=>'第 '+(i+1)+' 個').join(' 同 ');}
 function drawPos(q){
@@ -421,7 +495,7 @@ function drawPos(q){
 
 /* ================= 任務設定 ================= */
 const CFG={range:'any',median:'same',mode:'any',iqr:'down'};
-const LABEL={range:'分佈域 range',median:'中位數 median',mode:'眾數 mode',iqr:'IQR'};
+const LABEL={range:'分佈域 range',median:'中位數 median',mode:'眾數數目 mode',iqr:'IQR'};
 const OPT=[['any','唔理','any'],['same','不變','same'],['up','上升','up'],['down','下跌','down']];
 function preset(k){
   if(k==='dse'){Object.assign(CFG,{range:'same',median:'same',mode:'any',iqr:'down'});
@@ -444,13 +518,16 @@ function drawCfg(){
 function modesOf(a){
   const m=new Map(); a.forEach(v=>m.set(v,(m.get(v)||0)+1));
   const mx=Math.max(...m.values());
-  return {vals:[...m.keys()].filter(v=>m.get(v)===mx).sort((x,y)=>x-y),freq:mx};
+  const vals=[...m.keys()].filter(v=>m.get(v)===mx).sort((x,y)=>x-y);
+  /* 最高次數 = 1（每個值都只出現一次）⇒ 冇眾數 */
+  const none = mx<2;
+  return {vals: none?[]:vals, freq:mx, none:none, count: none?0:vals.length};
 }
 const sameArr=(x,y)=>x.length===y.length&&x.every((v,i)=>v===y[i]);
-function modeCmp(want,nw,od){
-  if(want==='same') return sameArr(nw.vals,od.vals);
-  if(want==='up')   return Math.min(...nw.vals)>Math.max(...od.vals);
-  if(want==='down') return Math.max(...nw.vals)<Math.min(...od.vals);
+function modeCmp(want,nw,od){          /* 比較「眾數嘅個數」 */
+  if(want==='same') return nw.count===od.count;
+  if(want==='up')   return nw.count>od.count;
+  if(want==='down') return nw.count<od.count;
   return true;
 }
 function numCmp(want,n,o){
@@ -459,7 +536,9 @@ function numCmp(want,n,o){
   if(want==='down') return n<o;
   return true;
 }
-const modeTxt=m=>m.vals.join('、')+'（各出現 '+m.freq+' 次）';
+const modeTxt=m=> m.none ? '冇眾數（0 個，每個值都只出現 1 次）'
+                          : m.count+' 個眾數：'+m.vals.join('、')+'（各 '+m.freq+' 次）';
+const mfTxt=m=> m.none ? '冇眾數（0 個）' : m.count+' 個眾數（'+m.vals.join('、')+'，各 '+m.freq+' 次）';
 
 /* ================= 判定 ================= */
 function evalSet(arr){                       // arr = 完整數據
@@ -476,7 +555,7 @@ function taskInfo(){
       '而家 '+fmt(q.range)+'，原本 '+fmt(o.range)]);
   if(CFG.median!=='any') C.push(['中位數 '+w2(CFG.median),numCmp(CFG.median,q.q2,o.q2),
       '而家 '+fmt(q.q2)+'，原本 '+fmt(o.q2)]);
-  if(CFG.mode!=='any') C.push(['眾數 '+w2(CFG.mode),modeCmp(CFG.mode,q.modes,o.modes),
+  if(CFG.mode!=='any') C.push(['眾數數目 '+w2(CFG.mode),modeCmp(CFG.mode,q.modes,o.modes),
       '而家 '+modeTxt(q.modes)+'，原本 '+modeTxt(o.modes)]);
   if(CFG.iqr!=='any') C.push(['IQR '+w2(CFG.iqr),numCmp(CFG.iqr,q.iqr,o.iqr),
       '而家 '+fmt(q.iqr)+'，原本 '+fmt(o.iqr)]);
@@ -572,8 +651,8 @@ function whereText(o){
   }
   if(CFG.iqr==='same')
     return '兩邊對稱咁加，令 Q₁、Q₃ 兩個位置坐返 '+fmt(o.q1)+' 同 '+fmt(o.q3);
-  if(CFG.mode==='up')   return '同一個<b>大過</b> '+o.modes.vals.join('、')+' 嘅值（集中火力加）';
-  if(CFG.mode==='down') return '同一個<b>細過</b> '+o.modes.vals.join('、')+' 嘅值（集中火力加）';
+  if(CFG.mode==='up')   return '<b>某一個值</b>度，加到<b>追平</b>現有嘅最高次數（變成並列）';
+  if(CFG.mode==='down') return '現有嘅眾數之中<b>揀一個</b>，集中加佢令佢<b>獨大</b>';
   if(CFG.median==='up') return '上半（大過 '+fmt(m)+' ）嗰邊';
   if(CFG.median==='down')return '下半（細過 '+fmt(m)+' ）嗰邊';
   return '任何位置';
@@ -582,7 +661,7 @@ function oneLiner(){
   const e=document.getElementById('oneline'); if(!e) return;
   const o=evalSet(orig); if(!o){e.innerHTML='';return;}
   const keep=[], move=[];
-  const nm={range:'分佈域 range',median:'中位數 median',mode:'眾數 mode',iqr:'IQR'};
+  const nm={range:'分佈域 range',median:'中位數 median',mode:'眾數數目',iqr:'IQR'};
   ['range','median','mode','iqr'].forEach(f=>{
     if(CFG[f]==='same') keep.push(nm[f]);
     else if(CFG[f]==='up') move.push(nm[f]+' 要<b>升</b>');
@@ -592,9 +671,20 @@ function oneLiner(){
     e.innerHTML='<div class="oneline">上面未揀任何條件 —— 揀返「邊樣唔變、邊樣要變」，'+
       '呢度就會即刻寫出攻略句。</div>'; return;
   }
-  if(CFG.range==='down'){
-    e.innerHTML='<div class="oneline"><span class="warn2">⚠ range 下跌係做唔到嘅</span> —— '+
-      '加 data 只會令分佈域維持或者變大。改返呢個設定先。</div>'; return;
+  const mdImp = CFG.mode==='down' && evalSet(orig).modes.count<=1;
+  if(CFG.range==='down'||mdImp){
+    const isR=CFG.range==='down';
+    e.innerHTML='<div class="oneline"><span class="warn2">⚠ '+
+      (isR?'分佈域下跌':'眾數數目下跌')+'係<u>結構上</u>做唔到嘅</span><br>'+
+      '<span class="small">'+
+      (isR? '分佈域 = 最大值 − 最細值。加 data 只會令最大值更大、最細值更細（或者唔變），'+
+            '所以分佈域<b>永遠唔會縮細</b>。'
+          : '而家只有 '+evalSet(orig).modes.count+' 個眾數。加 data 唔會令任何值嘅次數<b>減少</b>，'+
+            '所以已經係眾數嘅值永遠都會保持最高（或者被追平），眾數個數<b>減唔到</b>。'+
+            '（要「跌」，原本至少要有 2 個眾數並列，先可以令其中一個獨大。）')+
+      '<br><b>要學識嘅諗法：</b>落筆前先問一句 ——「<b>加嘢</b>呢個動作，令得邊樣嘢郁？」'+
+      '加 data <b>只會令次數增加</b>，所以分佈域只升不跌；'+
+      '眾數個數就要視乎原本有冇並列。</span></div>'; return;
   }
   const kv=document.getElementById('kadd').value;
   const remain=(kv==='any')?null:(+kv-added.length);
@@ -613,11 +703,15 @@ function oneLiner(){
   const extra=[];
   if(CFG.median==='same') extra.push('median 唔變 ⇒ 落下半、落上半嘅數目要<b>一半一半</b>。');
   if(CFG.range==='same')  extra.push('range 唔變 ⇒ 唔可以細過 '+orig[0]+' 或者大過 '+orig[orig.length-1]+'。');
-  if(CFG.mode==='up'||CFG.mode==='down')
-    extra.push('mode 要'+w2(CFG.mode)+' ⇒ 另外要<b>集中火力</b>加同一個'+
-      (CFG.mode==='up'?'大過':'細過')+' '+o.modes.vals.join('、')+' 嘅值（加到超過 '+o.modes.freq+
-      ' 次），同上面嘅位置要求可能有衝突，要試。');
-  if(CFG.mode==='same')   extra.push('mode 唔變 ⇒ 唔好一次過加太多同一個值（唔可以追過 '+o.modes.freq+' 次）。');
+  if(CFG.mode==='up')
+    extra.push('眾數數目要升 ⇒ 要令<b>多一個值追平</b>'+
+      (o.modes.none?'（有一個值出現 2 次即可）':o.modes.freq+' 次')+
+      '；但嗰個值嘅位置又要夾到上面嘅要求，可能有衝突。');
+  if(CFG.mode==='down')
+    extra.push('眾數數目要跌 ⇒ 要喺現有眾數（'+ (o.modes.none?'冇':o.modes.vals.join('、')) +
+      '）之中揀一個集中加，令佢獨大。');
+  if(CFG.mode==='same')   extra.push('眾數數目唔變（原本 '+mfTxt(o.modes)+'）⇒ '+
+      '唔好搞到多咗一個值追平，亦唔好搞到其中一個獨大。');
   if(CFG.range==='same'&&CFG.iqr==='up')
     extra.push('<span class="warn2">呢個組合好可能做唔到</span>：Q₃ 已經頂住 '+orig[orig.length-1]+' 升唔到，只可以靠 Q₁ 跌。');
   const t0=taskInfo();
@@ -629,7 +723,9 @@ function oneLiner(){
   }
   const sol=advice();
   if(sol===null){
-    extra.push('<span class="warn2">⚠ 實測：呢組數據做唔到呢個組合</span> —— 改一改設定，或者換一組數據。');
+    extra.push('<span class="warn2">⚠ 實測：呢組數據做唔到呢個組合</span>'+
+      '　<button class="sm" style="padding:4px 10px;min-height:32px;font-size:13px"'+
+      ' onclick="explainFail()">▸ 點解做唔到？</button><div id="whyfail"></div>');
   }else{
     if(!advInReg && sol.length) extra.push('<span class="warn2">⚠ 呢組數據淨係咁唔夠</span>：'+
         '實測仲要 '+zoneSummary(sol,cs)+'（撳「提示 3」睇實際數字）。');
@@ -640,6 +736,194 @@ function oneLiner(){
   e.innerHTML=s;
 }
 
+function drawTree(){
+  const w=document.getElementById('tree'); if(!w) return;
+  const o=evalSet(orig), cs=evalSet(data);
+  if(!o){w.innerHTML='';return;}
+  const mn=orig[0], mx=orig[orig.length-1];
+  const box=(sel,t,s,cls)=>'<div class="nd'+(cls?' '+cls:'')+(sel?' on':' dim')+'">'+
+      '<span class="t">'+t+'</span>'+(s?'<span class="s">'+s+'</span>':'')+'</div>';
+
+  const DEF={
+    range:{q:'分佈域 range 有冇鎖？',opts:[
+      ['same','不變','⇒ 唔可以出界，只可以用 '+mn+'～'+mx],
+      ['up','要升','⇒ 至少一個要出界（＜'+mn+' 或 ＞'+mx+'）'],
+      ['down','要跌','⇒ ⚠ 加 data 冇可能做到']]},
+    median:{q:'中位數 median 有冇鎖？',opts:[
+      ['same','不變','⇒ 落下半／上半嘅數目<b>一半一半</b>'],
+      ['up','要升','⇒ 多數要落<b>上半</b>（＞'+fmt(cs.q2)+'）'],
+      ['down','要跌','⇒ 多數要落<b>下半</b>（＜'+fmt(cs.q2)+'）']]},
+    mode:{q:'眾數<b>數目</b>有冇鎖？　（原本：'+mfTxt(o.modes)+'）',opts:[
+      ['same','不變','⇒ 並列嘅個數要一樣：唔好整多一個追平，亦唔好令其中一個獨大'],
+      ['up','要升', o.modes.none? '⇒ 令一個值出現 2 次（0 個 → 1 個眾數）'
+                                : '⇒ 令<b>多一個值追平</b> '+o.modes.freq+' 次（變並列）'],
+      ['down','要跌', o.modes.count>=2
+                                ? '⇒ 揀現有眾數其中一個，<b>集中加佢令佢獨大</b>'
+                                : '⇒ ⚠ 原本得 '+o.modes.count+' 個，減唔到']]},
+    iqr:{q:'IQR 要點？　（IQR = Q₃ − Q₁）',opts:[
+      ['down','要跌 ↓','⇒ Q₁ 升、Q₃ 跌 ＝ <b>向內夾</b>'],
+      ['up','要升 ↑','⇒ Q₁ 跌、Q₃ 升 ＝ <b>向外撐</b>'],
+      ['same','不變 ＝','⇒ 兩個位置要坐返 '+fmt(o.q1)+' 同 '+fmt(o.q3)]]}
+  };
+  const order=['range','median','mode','iqr'].filter(f=>CFG[f]!=='any');
+  if(!order.length){
+    w.innerHTML='<div class="treefoot">上面未揀任何條件 —— 揀咗之後，'+
+      '呢度會砌返一條「應該點諗」嘅路出嚟。</div>'; return;
+  }
+  let h='<div class="stair">';
+  order.forEach((f,i)=>{
+    const d=DEF[f];
+    h+='<div class="slev"><div class="sq"><span class="no">'+(i+1)+'</span>'+d.q+'</div><div class="srow">';
+    d.opts.forEach(op=>{ h+=box(CFG[f]===op[0],op[1],op[2]); });
+    h+='</div></div><div class="arw">▼</div>';
+  });
+  const sol=advice();
+  let ct,cls='concl';
+  if(sol===null){ ct='<span class="t">⚠ 呢組數據做唔到呢個組合</span>'+
+      '<span class="s">撳返上面一句話攻略嗰個「▸ 點解做唔到？」睇原因</span>'; cls='concl bad'; }
+  else{
+    ct='<span class="t">結論：加喺 '+whereText(cs)+'</span>';
+    if(!advInReg && sol.length) ct+='<span class="s">⚠ 呢組數據要微調：仲要 '+zoneSummary(sol,cs)+'</span>';
+    else ct+='<span class="s">加完之後，數多一次 Q₁、Q₃ 係第幾個，再對返上面每個 ✓</span>';
+  }
+  h+='<div class="nd '+cls+' on">'+ct+'</div></div>';
+  w.innerHTML=h;
+}
+function diagnose(){
+  const kEl=document.getElementById('kadd');
+  const save={...CFG}, saveK=kEl.value;
+  const active=['range','median','mode','iqr'].filter(f=>CFG[f]!=='any');
+  const res={single:[],kFix:null,noneAlone:false};
+  if(saveK!=='any'){
+    for(const k of ['2','4','6','8']){
+      if(k===saveK) continue;
+      kEl.value=k; if(trySolve()){res.kFix=k;break;}
+    }
+    kEl.value=saveK;
+  }
+  for(const f of active){
+    CFG[f]='any';
+    if(trySolve()) res.single.push(f);
+    CFG[f]=save[f];
+  }
+  Object.assign(CFG,save); kEl.value=saveK; advKey='';
+  res.noneAlone = res.single.length===0;
+  return res;
+}
+function effectRange(){
+  /* 暫時唔理 IQR，試齊所有合法加法，睇 Q₁／Q₃ 實際上可以去到咩位 */
+  const save=CFG.iqr; CFG.iqr='any';
+  const t=taskInfo(); if(!t){CFG.iqr=save;return null;}
+  const c=evalSet(data);
+  const remain=(t.k!==null)? t.k-added.length : null;
+  const sizes=(remain!==null)?[remain]:[1,2,3,4];
+  const q1s=new Set(), q3s=new Set(), iq=new Set();
+  let cnt=0, guard=0;
+  for(const k of sizes){
+    if(k<=0) continue;
+    let cand=buildCand(c,k,null);
+    if(cand.length>13 && k>=5) cand=cand.slice(0,13);
+    const pick=[];
+    const rec=(start)=>{
+      if(guard>250000) return;
+      if(pick.length===k){
+        guard++;
+        if(meets(data.concat(pick))){
+          const s=evalSet(data.concat(pick).sort((x,y)=>x-y));
+          q1s.add(s.q1); q3s.add(s.q3); iq.add(s.iqr); cnt++;
+        }
+        return;
+      }
+      for(let i=start;i<cand.length;i++){ pick.push(cand[i]); rec(i); pick.pop(); if(guard>250000) return; }
+    };
+    rec(0);
+  }
+  CFG.iqr=save; advKey='';
+  if(!cnt) return {none:true};
+  const S=x=>[...x].sort((a,b)=>a-b);
+  return {none:false,cnt:cnt,q1:S(q1s),q3:S(q3s),iqr:S(iq)};
+}
+function moveWord(list,base){
+  const lo=list[0], hi=list[list.length-1];
+  if(lo===hi&&lo===base) return '<b>完全郁唔到</b>，永遠 = '+fmt(base);
+  if(lo>=base) return '<b>只會維持或者升</b>（跌唔到）';
+  if(hi<=base) return '<b>只會維持或者跌</b>（升唔到）';
+  return '可升可跌';
+}
+function iqrWall(){
+  const r=effectRange(), o=evalSet(orig);
+  if(!r) return '';
+  if(r.none) return '<b>實測：</b>就算<u>唔理 IQR</u>，其他條件本身都已經冇任何加法做得到 ⇒ '+
+                    '問題唔喺 IQR，係其他條件之間打結。';
+  const show=a=>a.slice(0,6).map(fmt).join('、')+(a.length>6?' …':'');
+  let h='<b>實測（暫時唔理 IQR，把其他條件之下所有加法試齊）：</b><br>'+
+    '• <b>Q₁</b> 只可以係 '+show(r.q1)+'（原本 '+fmt(o.q1)+'）⇒ '+moveWord(r.q1,o.q1)+'<br>'+
+    '• <b>Q₃</b> 只可以係 '+show(r.q3)+'（原本 '+fmt(o.q3)+'）⇒ '+moveWord(r.q3,o.q3)+'<br>'+
+    '• 所以 <b>IQR 只可以係 '+show(r.iqr)+'</b>（原本 '+fmt(o.iqr)+'）';
+  const lo=r.iqr[0], hi=r.iqr[r.iqr.length-1];
+  if(CFG.iqr==='down') h+='<br>你要 IQR <b>跌</b>，但最細都只係 '+fmt(lo)+
+      (lo>=o.iqr?'，即係<b>跌唔落</b> ⇒ 冇可能。':'。');
+  if(CFG.iqr==='up') h+='<br>你要 IQR <b>升</b>，但最大都只係 '+fmt(hi)+
+      (hi<=o.iqr?'，即係<b>升唔到</b> ⇒ 冇可能。':'。');
+  if(CFG.iqr==='same') h+='<br>你要 IQR <b>維持 '+fmt(o.iqr)+'</b>，但可以做到嘅值入面'+
+      (r.iqr.includes(o.iqr)?'有':'冇')+'呢個數。';
+  return h;
+}
+function whyPair(f){
+  const mn=orig[0],mx=orig[orig.length-1],o=evalSet(orig);
+  if(f==='range'&&CFG.range==='same'&&CFG.iqr==='up')
+    return '分佈域鎖死咗唔可以出界：Q₃ 已經頂住最大值 '+mx+' 升唔到，Q₁ 又落唔到 '+mn+
+           ' 以下，兩邊都撐唔開，所以 IQR 大唔到。';
+  if(f==='range'&&CFG.range==='same')
+    return '分佈域鎖死咗，可以用嘅數值只有 '+mn+' 到 '+mx+'，唔夠位擺去達成其他要求。';
+  if(f==='range') return '分佈域嘅要求（要出界／唔准出界）同其他條件想要嘅擺位撞咗。';
+  if(f==='median')
+    return '中位數鎖死咗「落下半、落上半」嘅數目要平衡；但其他條件要你偏心咁加落一邊，兩者撞晒。';
+  if(f==='mode')
+    return CFG.mode==='same'
+      ? '眾數數目要維持（原本 '+mfTxt(o.modes)+'）；但你要加嘅 data 一係令某個值追平、'+
+        '一係令某個值獨大，好難啱啱好唔改變並列嘅個數。'
+      : (CFG.mode==='up'
+        ? '眾數數目要升 ⇒ 要令多一個值追平最高次數，即係要喺<b>指定嘅值</b>度重複加；'+
+          '但嗰個值嘅位置又要夾到 IQR／中位數／分佈域嘅要求，用同一批 data 滿足唔到兩邊。'
+        : '眾數數目要跌 ⇒ 要令其中一個眾數獨大，即係要喺<b>嗰個值</b>度加好多次；'+
+          '但咁樣又會把 Q₁／Q₃／中位數推向嗰個位置，同其他條件撞。');
+  if(f==='iqr') return '';
+  return '';
+}
+function explainFail(){
+  const w=document.getElementById('whyfail'); if(!w) return;
+  w.innerHTML='<div class="whybox">診斷緊…</div>';
+  setTimeout(()=>{
+    const nm={range:'分佈域 range',median:'中位數 median',mode:'眾數數目',iqr:'IQR'};
+    let h='';
+    if(CFG.range==='down'){
+      h='<b>結構上就冇可能。</b>加 data 只會令最細值更細、最大值更大（或者唔變），'+
+        '所以分佈域<b>永遠唔會縮細</b>。<div class="whyq"><b>要學識嘅諗法：</b>'+
+        '有啲條件係「加 data 呢個動作」本身做唔到嘅 —— 落筆前先問：加嘢會令佢變大定變細？</div>';
+      w.innerHTML='<div class="whybox">'+h+'</div>'; return;
+    }
+    const d=diagnose();
+    h='<b>做法：逐個條件「假裝取消」，睇下邊個係死結。</b><br>';
+    if(d.single.length){
+      h+=d.single.map(f=>{const r=whyPair(f);
+          return '• 淨係取消【'+nm[f]+' '+w2(CFG[f])+'】就做到 ⇒ <b>呢個就係打結嗰度</b>'+
+                 (r?'<br>　<span class="small">'+r+'</span>':'');}).join('<br>');
+    }else{
+      h+='• 逐個取消都唔得 ⇒ 唔係單一個條件嘅問題，而係<b>幾個條件夾埋</b>'+
+         '（或者 data 數目唔啱）先做唔到。';
+    }
+    if(CFG.iqr!=='any'){ const wall=iqrWall(); if(wall) h+='<div class="whyq">'+wall+'</div>'; }
+    if(d.kFix) h+='<br>• 但如果改成 <b>加 '+d.kFix+' 個 data</b> 就做到 ⇒ '+
+                  '<span class="small">唔係條件矛盾，只係<b>數目唔夠／太多</b>。'+
+                  '（上面嘅實測係以現時嘅 k 計；k 一變，Q₁／Q₃ 可以郁到嘅範圍就唔同 —— '+
+                  '因為位置 = 第幾個，n 變位置就跟住變。）</span>';
+    h+='<div class="whyq"><b>要學識嘅諗法：</b>做唔到嘅時候，唔好亂試 —— '+
+       '逐個條件問「淨係得佢，做唔做到？」，再問「加咗第二個，仲做唔做到？」，'+
+       '好快就會捉到邊兩個係互相排斥。</div>';
+    w.innerHTML='<div class="whybox">'+h+'</div>';
+  },20);
+}
 /* ================= 搜尋答案 ================= */
 function meets(arr){
   arr=arr.slice().sort((x,y)=>x-y);
@@ -707,9 +991,16 @@ function L1(f,o){
    median:{same:'「≤ 中位數」嘅個數會被<b>鎖死</b> ⇒ 新 data 要<b>一半落下半、一半落上半</b>。',
            up:'要令中間嗰個位置坐住更大嘅值 ⇒ <b>大部分新 data 要落上半</b>（大過 '+fmt(o.q2)+'）。',
            down:'要令中間嗰個位置坐住更細嘅值 ⇒ <b>大部分新 data 要落下半</b>（細過 '+fmt(o.q2)+'）。'},
-   mode:{same:'原本眾數係 '+modeTxt(o.modes)+' ⇒ <b>唔可以</b>令另一個值嘅次數追過 '+o.modes.freq+' 次。',
-         up:'要令一個<b>大過</b> '+o.modes.vals.join('、')+' 嘅值，出現次數<b>超過</b> '+o.modes.freq+' 次。',
-         down:'要令一個<b>細過</b> '+o.modes.vals.join('、')+' 嘅值，出現次數<b>超過</b> '+o.modes.freq+' 次。'},
+   mode:{same:'原本 '+mfTxt(o.modes)+' ⇒ 加完之後<b>並列最高次數嘅值嘅個數</b>要一樣。',
+         up: o.modes.none
+              ? '原本冇眾數 ⇒ 只要令<b>一個值出現 2 次</b>，眾數就由 0 個變成 1 個。'
+              : '要令<b>多一個值追平</b> '+o.modes.freq+' 次（同現有眾數並列）⇒ 眾數由 '+
+                o.modes.count+' 個變多。',
+         down: o.modes.count>=2
+              ? '而家有 '+o.modes.count+' 個眾數並列（各 '+o.modes.freq+
+                ' 次）⇒ 集中加<b>其中一個</b>，令佢<b>獨大</b>，其餘就唔再係眾數。'
+              : '⚠ 原本得 '+o.modes.count+' 個眾數 —— 加 data 唔會令任何值嘅次數減少，'+
+                '所以個數<b>減唔到</b>。'},
    iqr:{same:'Q₁、Q₃ 兩個位置坐住嘅值要維持返 '+fmt(o.q1)+' 同 '+fmt(o.q3)+'。',
         up:'要 <b>Q₁ 跌</b> 或者 <b>Q₃ 升</b>（最好一齊發生）。',
         down:'要 <b>Q₁ 升</b> 或者 <b>Q₃ 跌</b>（最好一齊發生）。'}
@@ -729,12 +1020,16 @@ function L2(o){
   if(CFG.range==='same'&&CFG.iqr==='up')
     out.push('⚠ 配 <b>range 不變</b>：唔可以出界，Q₃ 好多時已經頂住 '+mx+' 升唔到，'+
              '所以要靠 <b>Q₁ 跌</b>（多加啲近 '+mn+' 嘅值）。有機會做唔到。');
-  if(CFG.mode==='same'&&(CFG.iqr==='down'))
-    out.push('配 <b>mode 不變</b>：中間嗰啲值唔好一次過加太多同一個數字，'+
-             '分散加喺 '+fmt(o.q1)+'～'+fmt(o.q3)+' 之間唔同嘅值。');
-  if(CFG.mode==='up'||CFG.mode==='down')
-    out.push('<b>mode 要郁</b> ⇒ 一定要<b>集中火力</b>加同一個值（至少加到超過 '+o.modes.freq+' 次），'+
-             '再檢查會唔會撞到 median／IQR 嘅條件。');
+  if(CFG.mode==='same')
+    out.push('配 <b>眾數數目不變</b>（原本 '+mfTxt(o.modes)+'）：小心唔好整多咗或者整少咗並列 —— '+
+             '加得太集中會令某個值獨大，加啱啱好又會令另一個值追平。');
+  if(CFG.mode==='up')
+    out.push('<b>眾數數目要升</b> ⇒ 要令<b>多一個值追平</b>現有嘅最高次數'+
+             (o.modes.none?'（原本冇眾數，即係搞到有一個值出現 2 次就得）':'（'+o.modes.freq+' 次）')+
+             '，變成並列。');
+  if(CFG.mode==='down')
+    out.push('<b>眾數數目要跌</b> ⇒ 喺現有嘅眾數之中<b>揀一個</b>，集中加佢，令佢<b>獨大</b>；'+
+             '其餘嗰啲就唔再係眾數。');
   if(CFG.range==='down') out.push('⚠ <b>range 下跌係唔可能</b>嘅，請改返呢個設定。');
   if(!out.length) out.push('而家冇設任何條件，隨便試下加 data，睇住 Q₁、Q₃ 點郁。');
   return out.map(s=>'• '+s).join('<br>');
@@ -774,8 +1069,9 @@ function hintHTML(lv){
         (added.length? '（除咗你已經加咗嘅 '+added.join('、')+'）':'')+'<br>'+
         '加完之後 ── Q₁ '+fmt(o.q1)+' → <b>'+fmt(nq.q1)+'</b>　·　Q₃ '+fmt(o.q3)+' → <b>'+fmt(nq.q3)+'</b><br>'+
         'IQR '+fmt(o.iqr)+' → <b>'+fmt(nq.iqr)+'</b>　·　中位數 '+fmt(o.q2)+' → '+fmt(nq.q2)+
-        '　·　range '+fmt(o.range)+' → '+fmt(nq.range)+'　·　眾數 '+o.modes.vals.join('、')+
-        ' → '+nq.modes.vals.join('、')+
+        '　·　分佈域 '+fmt(o.range)+' → '+fmt(nq.range)+
+        '　·　眾數 '+(o.modes.none?'冇':o.modes.vals.join('、')+'（'+o.modes.freq+' 次）')+
+        ' → '+(nq.modes.none?'冇':nq.modes.vals.join('、')+'（'+nq.modes.freq+' 次）')+
         '<div class="row" style="margin-top:8px">'+
         '<button class="gr sm" onclick="applySolution()">幫我加落去</button>'+
         '<span class="small">建議自己先試，再對答案。</span></div>';
